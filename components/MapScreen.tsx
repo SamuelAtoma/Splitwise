@@ -691,6 +691,7 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
     const { data } = await supabase
       .from('map_sessions')
       .select(`*, profile:profiles(first_name, last_name, avatar_emoji)`)
+      .eq('market_name', selectedMarket.name)
       .neq('user_id', currentUser?.id || '');
     if (!data) return;
     const nearby = data.filter((u: any) =>
@@ -701,16 +702,19 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
 
   const goOnMap = async () => {
     if (!location || !selectedMarket || !currentUser) return;
-    const { data } = await supabase.from('map_sessions').insert({
+    const { data, error } = await supabase.from('map_sessions').insert({
       user_id:     currentUser.id,
-      market_id:   selectedMarket.is_custom ? null : selectedMarket.id,
       market_name: selectedMarket.name,
       lat:         location.lat,
       lng:         location.lng,
       is_pooling:  false,
-      radius:      radius * 1000,
     }).select().single();
-    if (data) { setMySessionId(data.id); setIsOnMap(true); }
+    if (error) { console.error('goOnMap error:', error); return; }
+    if (data) {
+      setMySessionId(data.id);
+      setIsOnMap(true);
+      await fetchNearbyUsers();
+    }
     await supabase.from('profiles').update({
       is_on_map:      true,
       last_lat:       location.lat,
