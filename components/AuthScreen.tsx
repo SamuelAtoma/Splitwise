@@ -4,6 +4,7 @@ import {
   TextInput, ScrollView, Platform,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
+import Logo from './Logo';
 
 const TEAL       = '#17B8B8';
 const TEAL_DARK  = '#0D8F8F';
@@ -241,10 +242,8 @@ function LeftPanel({ heading, sub, btnLabel, onBtnPress }: {
       <MapBgSVG/>
       {/* Content sits directly on map */}
       <View style={f.leftContent}>
-        <Text style={f.leftLogo}>
-          SPLITWI<Text style={{ color: WHITE + 'AA' }}>$</Text>E
-        </Text>
-        <Text style={f.leftTag}>SHOP TOGETHER, SAVE TOGETHER</Text>
+        <Logo size={38} color={WHITE} showText textSize={20} textColor={WHITE} />
+        <Text style={f.leftTag}>FIND YOUR PEOPLE, SHOP TOGETHER</Text>
         <View style={f.leftDivider}/>
         <Text style={f.leftHeading}>{heading}</Text>
         <Text style={f.leftSub}>{sub}</Text>
@@ -354,8 +353,8 @@ function SignUpScreen({ onBack, onSuccess, onSignIn }: {
         <ScrollView style={{flex:1}} contentContainerStyle={f.mobileScroll}
           showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={f.mobileCard}>
-            <Text style={f.mLogo}>SPLITWI<Text style={{color:TEAL_DARK}}>$</Text>E</Text>
-            <Text style={f.mTag}>SHOP TOGETHER, SAVE TOGETHER</Text>
+            <Logo size={32} color={TEAL_DARK} showText textSize={20} textColor={TEAL_DARK} />
+            <Text style={f.mTag}>FIND YOUR PEOPLE, SHOP TOGETHER</Text>
             <Text style={f.mTitle}>Create Account</Text>
             <View style={f.socialRow}>
               <SocialBtn label={socialLoading==='google'?'...':'Google'} icon={<GoogleSVG/>}
@@ -433,14 +432,17 @@ function SignUpScreen({ onBack, onSuccess, onSignIn }: {
       <View style={f.splitRoot}>
         <LeftPanel
           heading={'Already have\nan account?'}
-          sub={'Sign in to find nearby shoppers,\nsplit delivery and save more.'}
+          sub={'Sign in to find nearby shoppers\nordering from the same market as you.'}
           btnLabel="SIGN IN"
           onBtnPress={onSignIn!}
         />
         <ScrollView style={f.rightPanel} contentContainerStyle={f.rightScroll}
           showsVerticalScrollIndicator={false}>
+          <TouchableOpacity onPress={onBack} style={f.webBackBtn}>
+            <Text style={f.webBackBtnTxt}>← Back</Text>
+          </TouchableOpacity>
           <Text style={f.rightTitle}>Create Account</Text>
-          <Text style={f.rightSubtitle}>Join thousands saving on delivery fees</Text>
+          <Text style={f.rightSubtitle}>Join thousands of shoppers connecting near you</Text>
 
           <View style={f.socialRow}>
             <SocialBtn label={socialLoading==='google'?'Connecting...':'Google'} icon={<GoogleSVG/>}
@@ -528,6 +530,24 @@ function SignInScreen({ onBack, onSuccess, onSignUp }: {
   const [errors,        setErrors]        = useState<any>({});
   const [submitting,    setSubmitting]    = useState(false);
   const [socialLoading, setSocialLoading] = useState<string|null>(null);
+  const [showForgot,    setShowForgot]    = useState(false);
+  const [forgotEmail,   setForgotEmail]   = useState('');
+  const [forgotSent,    setForgotSent]    = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+
+  const handleForgot = async () => {
+    if (!forgotEmail.trim()) { setErrors({ forgot: 'Enter your email address.' }); return; }
+    try {
+      setForgotLoading(true); setErrors({});
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/reset-password` : undefined,
+      });
+      if (error) throw error;
+      setForgotSent(true);
+    } catch (err: any) {
+      setErrors({ forgot: err.message || 'Could not send reset email.' });
+    } finally { setForgotLoading(false); }
+  };
 
   const handleSocial = async (provider: 'google'|'apple') => {
     try {
@@ -569,9 +589,41 @@ function SignInScreen({ onBack, onSuccess, onSignUp }: {
         </View>
         <Text style={f.rememberTxt}>Stay signed in</Text>
       </TouchableOpacity>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => { setShowForgot(true); setForgotSent(false); setForgotEmail(email); setErrors({}); }}>
         <Text style={f.forgotTxt}>Forgot password?</Text>
       </TouchableOpacity>
+    </View>
+  );
+
+  // ── Forgot password inline panel ──
+  const ForgotPanel = () => (
+    <View style={f.forgotPanel}>
+      {forgotSent ? (
+        <>
+          <Text style={f.forgotPanelTitle}>Check your inbox ✓</Text>
+          <Text style={f.forgotPanelSub}>A reset link was sent to {forgotEmail}. Check your email and follow the link.</Text>
+          <TouchableOpacity onPress={() => setShowForgot(false)} style={f.forgotClose}>
+            <Text style={f.forgotCloseTxt}>Back to Sign In</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <>
+          <Text style={f.forgotPanelTitle}>Reset your password</Text>
+          <Text style={f.forgotPanelSub}>Enter the email tied to your account and we'll send a reset link.</Text>
+          <Input placeholder="Email address" value={forgotEmail} onChangeText={setForgotEmail}
+            keyboardType="email-address" required error={errors.forgot} icon={<EmailSVG/>}/>
+          <View style={{ flexDirection:'row', gap:8, marginTop:4 }}>
+            <TouchableOpacity onPress={() => setShowForgot(false)}
+              style={[f.forgotClose, { flex:1, borderWidth:1.5, borderColor:LIGHT_BORDER, backgroundColor:'transparent' }]}>
+              <Text style={[f.forgotCloseTxt, { color:MID }]}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleForgot} disabled={forgotLoading}
+              style={[f.forgotClose, { flex:1, opacity: forgotLoading ? 0.7 : 1 }]}>
+              <Text style={f.forgotCloseTxt}>{forgotLoading ? 'Sending...' : 'Send Link'}</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </View>
   );
 
@@ -591,11 +643,11 @@ function SignInScreen({ onBack, onSuccess, onSignUp }: {
         <ScrollView style={{flex:1}} contentContainerStyle={f.mobileScroll}
           showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={f.mobileCard}>
-            <Text style={f.mLogo}>SPLITWI<Text style={{color:TEAL_DARK}}>$</Text>E</Text>
-            <Text style={f.mTag}>SHOP TOGETHER, SAVE TOGETHER</Text>
+            <Logo size={32} color={TEAL_DARK} showText textSize={20} textColor={TEAL_DARK} />
+            <Text style={f.mTag}>FIND YOUR PEOPLE, SHOP TOGETHER</Text>
             <Text style={f.mTitle}>Welcome Back</Text>
             <Text style={{fontSize:13,color:MID,textAlign:'center',marginBottom:20}}>
-              Sign in to continue saving
+              Sign in to connect with nearby shoppers
             </Text>
             <View style={f.socialRow}>
               <SocialBtn label={socialLoading==='google'?'...':'Google'} icon={<GoogleSVG/>}
@@ -609,6 +661,7 @@ function SignInScreen({ onBack, onSuccess, onSignUp }: {
             <Input placeholder="Password" value={password} onChangeText={setPassword}
               secureTextEntry required error={errors.password} icon={<LockSVG/>}/>
             <RememberRow/>
+            {showForgot && <ForgotPanel/>}
             <ErrorBanner message={errors.submit||''}/>
             <TouchableOpacity style={[f.mainBtn,submitting&&{opacity:0.7}]}
               onPress={handleSignIn} disabled={submitting}>
@@ -635,14 +688,17 @@ function SignInScreen({ onBack, onSuccess, onSignUp }: {
       <View style={f.splitRoot}>
         <LeftPanel
           heading={'New here?'}
-          sub={'Sign up to find nearby shoppers,\nsplit delivery and save together.'}
+          sub={'Sign up to find nearby shoppers\nordering from the same market as you.'}
           btnLabel="SIGN UP"
           onBtnPress={onSignUp!}
         />
         <ScrollView style={f.rightPanel} contentContainerStyle={f.rightScroll}
           showsVerticalScrollIndicator={false}>
+          <TouchableOpacity onPress={onBack} style={f.webBackBtn}>
+            <Text style={f.webBackBtnTxt}>← Back</Text>
+          </TouchableOpacity>
           <Text style={f.rightTitle}>Welcome Back</Text>
-          <Text style={f.rightSubtitle}>Sign in to continue saving with your group</Text>
+          <Text style={f.rightSubtitle}>Sign in to connect with nearby shoppers</Text>
 
           <View style={f.socialRow}>
             <SocialBtn label={socialLoading==='google'?'Connecting...':'Google'} icon={<GoogleSVG/>}
@@ -659,6 +715,7 @@ function SignInScreen({ onBack, onSuccess, onSignUp }: {
             secureTextEntry required error={errors.password} icon={<LockSVG/>}/>
 
           <RememberRow/>
+          {showForgot && <ForgotPanel/>}
 
           <ErrorBanner message={errors.submit||''}/>
 
@@ -854,4 +911,13 @@ const f = StyleSheet.create({
   backBtnTxt: { color:MID, fontSize:15, fontWeight:'700' },
   switchLink: { marginTop:16, alignItems:'center' },
   switchTxt:  { fontSize:13, color:MID },
+
+  webBackBtn:    { alignSelf:'flex-start' as any, marginBottom:20, paddingVertical:6, paddingHorizontal:0 },
+  webBackBtnTxt: { color:TEAL_DARK, fontSize:14, fontWeight:'700' },
+
+  forgotPanel:      { backgroundColor:TEAL+'0D', borderRadius:14, padding:16, marginBottom:12, borderWidth:1, borderColor:TEAL+'25' },
+  forgotPanelTitle: { fontSize:15, fontWeight:'700', color:DARK, marginBottom:4 },
+  forgotPanelSub:   { fontSize:12, color:MID, marginBottom:12, lineHeight:18 },
+  forgotClose:      { backgroundColor:TEAL_DARK, borderRadius:10, paddingVertical:11, alignItems:'center' },
+  forgotCloseTxt:   { color:WHITE, fontSize:13, fontWeight:'700' },
 });

@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   Animated, PanResponder, Platform,
 } from 'react-native';
+import Logo from './Logo';
 
 const TEAL      = '#17B8B8';
 const TEAL_DARK = '#0D8F8F';
@@ -98,30 +99,30 @@ const slides = [
   {
     step: '01', tag: 'DISCOVER', icon: 'cart',
     title: 'Shop Together,\nSave Together',
-    subtitle: 'Find nearby shoppers ordering from the same online market. Create a group, pool your order, and split the delivery fee — saving everyone money instantly.',
+    subtitle: 'Find nearby shoppers ordering from the same online market. See who\'s ordering nearby, connect with them, and coordinate your purchases together.',
     chips: ['Jumia', 'Konga', 'Amazon', 'Jiji', 'Temu'],
     stats: [{ k: 'shoppers', l: 'Active\nShoppers' }, { k: 'markets', l: 'Online\nMarkets accepted' }],
   },
   {
     step: '02', tag: 'LOCATE', icon: 'map',
-    title: 'Same Street,\nBetter Deals',
-    subtitle: 'Our live map shows active pools nearby in real time. The closer your group members are, the cheaper it gets for everyone involved.',
+    title: 'Same Street,\nSame Market',
+    subtitle: 'Our live map shows active shoppers nearby in real time. Filter by market, set your radius, and find people ordering from the exact same place as you.',
     chips: ['0.2km away', '0.5km away', '1.1km away'],
     stats: [{ k: 'groups', l: 'Groups\nFormed' }, { k: 'cities', l: 'Cities\nCovered' }],
   },
   {
     step: '03', tag: 'COORDINATE', icon: 'chat',
-    title: 'Chat, Align,\nOrder Together',
-    subtitle: 'Group chat lets everyone confirm items and quantities before the order is placed. Discuss, align, and organise everything seamlessly.',
-    chips: ["Let's order 🙌", 'Same store?', "I'm in ✅"],
+    title: 'Chat, Connect,\nCoordinate',
+    subtitle: 'Group chat lets you talk directly with people ordering from the same market. Discuss, ask questions, and organise everything before you order.',
+    chips: ["Same store? 🛒", 'Let\'s connect!', "I'm nearby ✅"],
     stats: [{ k: 'shoppers', l: 'Active\nShoppers' }, { k: 'groups', l: 'Groups\nFormed' }],
   },
   {
-    step: '04', tag: 'SAVE BIG', icon: 'split',
-    title: 'Split the Cost,\nKeep the Change',
-    subtitle: 'Beat minimum order thresholds and divide delivery fees equally. What used to cost ₦2,000 now costs ₦400 split five ways — every single time.',
-    chips: ['₦2,000 → ₦400', '5 members', '80% saved'],
-    stats: [{ k: 'saved', l: 'Saved\nTogether' }, { k: 'markets', l: 'Online\nMarkets' }],
+    step: '04', tag: 'COMMUNITY', icon: 'split',
+    title: 'Your Community,\nNear You',
+    subtitle: 'Join a growing community of smart shoppers in your area. Browse groups, discover who\'s ordering nearby, and start connecting in seconds.',
+    chips: ['Join a group', 'Chat freely', 'Order smarter'],
+    stats: [{ k: 'shoppers', l: 'Active\nShoppers' }, { k: 'markets', l: 'Online\nMarkets' }],
   },
 ];
 
@@ -200,9 +201,7 @@ export default function Onboarding({ onFinish }: Props) {
 
       {/* ── Header ── */}
       <View style={s.header}>
-        <Text style={s.logo}>
-          SPLITWI<Text style={{ color: WHITE + 'BB' }}>$</Text>E
-        </Text>
+        <Logo size={32} color={WHITE} showText textSize={16} textColor={WHITE} />
         <View style={{ flex: 1 }} />
         <View style={s.stepPill}>
           <Text style={s.stepTxt}>{slide.step} / 04</Text>

@@ -4,6 +4,7 @@ import {
   ScrollView, TextInput, Platform, ActivityIndicator,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
+import Logo from './Logo';
 
 const TEAL = '#17B8B8';
 const TEAL_DARK = '#0D8F8F';
@@ -30,9 +31,10 @@ const THEMES = [
 
 interface Props {
   onComplete: () => void;
+  onBack?: () => void;
 }
 
-export default function ProfileSetup({ onComplete }: Props) {
+export default function ProfileSetup({ onComplete, onBack }: Props) {
   const [displayName,    setDisplayName]    = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('🧑🏾');
   const [selectedTheme,  setSelectedTheme]  = useState(THEMES[0]);
@@ -78,8 +80,15 @@ export default function ProfileSetup({ onComplete }: Props) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Back button */}
+        {onBack && (
+          <TouchableOpacity onPress={onBack} style={s.backBtn}>
+            <Text style={s.backBtnTxt}>← Back</Text>
+          </TouchableOpacity>
+        )}
+
         {/* Header */}
-        <Text style={s.logo}>SPLITWI<Text style={{ color: TEAL_DARK }}>$</Text>E</Text>
+        <Logo size={36} color={TEAL} showText textSize={18} textColor={TEAL_DARK} />
         <Text style={s.title}>Set Up Your Profile</Text>
         <Text style={s.subtitle}>Choose how you appear on the map to nearby shoppers</Text>
 
@@ -197,7 +206,8 @@ const s = StyleSheet.create({
 
   scroll: { paddingHorizontal: 24, paddingTop: Platform.OS === 'ios' ? 60 : 48, paddingBottom: 48, alignItems: 'center' },
 
-  logo:     { fontSize: 18, fontWeight: '900', color: DARK, letterSpacing: 1.5, marginBottom: 28 },
+  backBtn:    { alignSelf: 'flex-start' as any, marginBottom: 16, paddingVertical: 6 },
+  backBtnTxt: { color: TEAL_DARK, fontSize: 14, fontWeight: '700' },
   title:    { fontSize: 28, fontWeight: '800', color: DARK, textAlign: 'center', marginBottom: 10, letterSpacing: -0.5 },
   subtitle: { fontSize: 14, color: MID, textAlign: 'center', lineHeight: 22, marginBottom: 28, maxWidth: 320 },
 
