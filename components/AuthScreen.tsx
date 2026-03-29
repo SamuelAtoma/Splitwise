@@ -4,7 +4,6 @@ import {
   TextInput, ScrollView, Platform,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
-import Logo from './Logo';
 
 const TEAL       = '#17B8B8';
 const TEAL_DARK  = '#0D8F8F';
@@ -242,7 +241,9 @@ function LeftPanel({ heading, sub, btnLabel, onBtnPress }: {
       <MapBgSVG/>
       {/* Content sits directly on map */}
       <View style={f.leftContent}>
-        <Logo size={38} color={WHITE} showText textSize={20} textColor={WHITE} />
+        <Text style={f.leftLogo}>
+          SPLITWI<Text style={{ color: WHITE + 'AA' }}>$</Text>E
+        </Text>
         <Text style={f.leftTag}>FIND YOUR PEOPLE, SHOP TOGETHER</Text>
         <View style={f.leftDivider}/>
         <Text style={f.leftHeading}>{heading}</Text>
@@ -353,7 +354,7 @@ function SignUpScreen({ onBack, onSuccess, onSignIn }: {
         <ScrollView style={{flex:1}} contentContainerStyle={f.mobileScroll}
           showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={f.mobileCard}>
-            <Logo size={32} color={TEAL_DARK} showText textSize={20} textColor={TEAL_DARK} />
+            <Text style={f.mLogo}>SPLITWI<Text style={{color:TEAL_DARK}}>$</Text>E</Text>
             <Text style={f.mTag}>FIND YOUR PEOPLE, SHOP TOGETHER</Text>
             <Text style={f.mTitle}>Create Account</Text>
             <View style={f.socialRow}>
@@ -643,7 +644,7 @@ function SignInScreen({ onBack, onSuccess, onSignUp }: {
         <ScrollView style={{flex:1}} contentContainerStyle={f.mobileScroll}
           showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={f.mobileCard}>
-            <Logo size={32} color={TEAL_DARK} showText textSize={20} textColor={TEAL_DARK} />
+            <Text style={f.mLogo}>SPLITWI<Text style={{color:TEAL_DARK}}>$</Text>E</Text>
             <Text style={f.mTag}>FIND YOUR PEOPLE, SHOP TOGETHER</Text>
             <Text style={f.mTitle}>Welcome Back</Text>
             <Text style={{fontSize:13,color:MID,textAlign:'center',marginBottom:20}}>

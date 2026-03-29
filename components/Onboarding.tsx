@@ -3,7 +3,6 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   Animated, PanResponder, Platform,
 } from 'react-native';
-import Logo from './Logo';
 
 const TEAL      = '#17B8B8';
 const TEAL_DARK = '#0D8F8F';
@@ -201,7 +200,7 @@ export default function Onboarding({ onFinish }: Props) {
 
       {/* ── Header ── */}
       <View style={s.header}>
-        <Logo size={32} color={WHITE} showText textSize={16} textColor={WHITE} />
+        <Text style={s.logo}>SPLITWI<Text style={{ color: WHITE + 'AA' }}>$</Text>E</Text>
         <View style={{ flex: 1 }} />
         <View style={s.stepPill}>
           <Text style={s.stepTxt}>{slide.step} / 04</Text>

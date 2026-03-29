@@ -4,7 +4,6 @@ import {
   ScrollView, TextInput, Platform, ActivityIndicator,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
-import Logo from './Logo';
 
 const TEAL = '#17B8B8';
 const TEAL_DARK = '#0D8F8F';
@@ -88,7 +87,7 @@ export default function ProfileSetup({ onComplete, onBack }: Props) {
         )}
 
         {/* Header */}
-        <Logo size={36} color={TEAL} showText textSize={18} textColor={TEAL_DARK} />
+        <Text style={s.logo}>SPLITWI<Text style={{ color: TEAL_DARK }}>$</Text>E</Text>
         <Text style={s.title}>Set Up Your Profile</Text>
         <Text style={s.subtitle}>Choose how you appear on the map to nearby shoppers</Text>
 
