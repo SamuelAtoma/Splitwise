@@ -567,10 +567,126 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
   const botOpacity = botAnim;
   const botTransY  = botAnim.interpolate({ inputRange:[0,1], outputRange:[20,0] });
 
+  const isWeb = Platform.OS === 'web';
+
+  // Shared sidebar contents (used both in web permanent sidebar and mobile drawer)
+  const SidebarContents = () => (
+    <>
+      <View style={s.drawerHeader}>
+        <View style={s.drawerMapBg}>
+          {Array.from({length:8}).map((_,i)=>(
+            <View key={`h${i}`} style={[s.dgH,{top:`${(i/8)*100}%` as any}]}/>
+          ))}
+          <View style={s.drawerFrost}/>
+        </View>
+        <View style={s.drawerAvatar}>
+          {profile?.avatar_emoji
+            ? <Text style={{fontSize:30}}>{profile.avatar_emoji}</Text>
+            : <Text style={s.drawerAvatarTxt}>{getInitials()}</Text>
+          }
+        </View>
+        <Text style={s.drawerName}>{profile?.display_name||`${profile?.first_name||''} ${profile?.last_name||''}`}</Text>
+        <Text style={s.drawerEmail}>{email}</Text>
+        <View style={s.drawerBadge}><Text style={s.drawerBadgeTxt}>Active</Text></View>
+      </View>
+
+      <ScrollView style={s.drawerNav} showsVerticalScrollIndicator={false}>
+        {navItems.map((item) => (
+          <TouchableOpacity key={item.screen}
+            style={[s.navItem, activeScreen===item.screen && s.navItemActive]}
+            onPress={() => navigate(item.screen)}>
+            <View style={[s.navIconBox, activeScreen===item.screen && {backgroundColor:TEAL+'18'}]}>
+              {item.icon(activeScreen === item.screen)}
+            </View>
+            <Text style={[s.navLabel, activeScreen===item.screen && s.navLabelActive]}>
+              {item.label}
+            </Text>
+            {activeScreen===item.screen && <View style={s.navActiveBar}/>}
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      <View style={s.drawerFooter}>
+        <TouchableOpacity style={s.drawerSignOut} onPress={handleSignOut}>
+          {Icons.signout(MID, 16)}
+          <Text style={s.drawerSignOutTxt}>Sign Out</Text>
+        </TouchableOpacity>
+        <Text style={s.drawerVersion}>SPLITWI$E v1.0.0</Text>
+      </View>
+    </>
+  );
+
+  // Main screen content
+  const ScreenContent = () => (
+    <View style={s.screenContent}>
+      {activeScreen === 'Home' && (
+        <HomeScreen profile={profile} email={email} onNavigate={navigate}/>
+      )}
+      {activeScreen === 'Map' && (
+        <MapScreenComponent onOpenChat={handleOpenChat}/>
+      )}
+      {activeScreen === 'Groups' && (
+        <GroupOrdersScreen onOpenChat={handleOpenChat}/>
+      )}
+      {activeScreen === 'Chat' && (
+        <ChatScreen groupId={activeChatId}/>
+      )}
+      {activeScreen === 'Profile' && (
+        <ProfileScreen profile={profile} email={email} onSignOut={handleSignOut}/>
+      )}
+    </View>
+  );
+
+  // ── WEB: permanent sidebar layout ──────────────────────────
+  if (isWeb) {
+    return (
+      <View style={s.webRoot}>
+        {/* Permanent sidebar */}
+        <View style={s.webSidebar}>
+          <SidebarContents/>
+        </View>
+
+        {/* Main area */}
+        <View style={s.webMain}>
+          <View style={s.topBar}>
+            <View style={{width:28}}/>
+            <Text style={s.topBarTitle}>{screenTitles[activeScreen]}</Text>
+            <View style={s.topBarRight}>
+              <Text style={s.topBarLogo}>SPLITWI<Text style={{color:TEAL_DARK}}>$</Text>E</Text>
+            </View>
+          </View>
+          <ScreenContent/>
+        </View>
+
+        {/* Floating AI Chatbot */}
+        {botOpen && (
+          <Animated.View style={[s.botWindow,{
+            opacity: botOpacity,
+            transform: [{ scale: botScale }, { translateY: botTransY }],
+          }]}>
+            <AIChatbot onClose={toggleBot}/>
+          </Animated.View>
+        )}
+
+        {/* FAB */}
+        <TouchableOpacity style={s.botFab} onPress={toggleBot} activeOpacity={0.85}>
+          <View style={s.botFabInner}>
+            {botOpen ? Icons.close(WHITE, 20) : Icons.bot(WHITE, 22)}
+          </View>
+          {!botOpen && (
+            <View style={s.botFabBadge}>
+              <Text style={s.botFabBadgeTxt}>AI</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // ── MOBILE: animated sliding drawer ────────────────────────
   return (
     <View style={s.root}>
       <View style={s.main}>
-        {/* Top bar */}
         <View style={s.topBar}>
           <TouchableOpacity onPress={openDrawer} style={s.menuBtn}>
             <View style={s.menuLine}/>
@@ -582,82 +698,19 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
             <Text style={s.topBarLogo}>SPLITWI<Text style={{color:TEAL_DARK}}>$</Text>E</Text>
           </View>
         </View>
-
-        {/* ── Screens ── */}
-        <View style={s.screenContent}>
-          {activeScreen === 'Home' && (
-            <HomeScreen profile={profile} email={email} onNavigate={navigate}/>
-          )}
-          {activeScreen === 'Map' && (
-            <MapScreenComponent onOpenChat={handleOpenChat}/>
-          )}
-          {/* ✅ Real Group Orders Screen */}
-          {activeScreen === 'Groups' && (
-            <GroupOrdersScreen onOpenChat={handleOpenChat}/>
-          )}
-          {/* ✅ Real Chat Screen */}
-          {activeScreen === 'Chat' && (
-            <ChatScreen groupId={activeChatId}/>
-          )}
-          {activeScreen === 'Profile' && (
-            <ProfileScreen profile={profile} email={email} onSignOut={handleSignOut}/>
-          )}
-        </View>
+        <ScreenContent/>
       </View>
 
-      {/* Drawer overlay */}
       {drawerOpen && (
         <Animated.View style={[s.overlay,{opacity:overlayAnim}]} pointerEvents="auto">
           <TouchableOpacity style={{flex:1}} onPress={closeDrawer} activeOpacity={1}/>
         </Animated.View>
       )}
 
-      {/* Drawer */}
       <Animated.View style={[s.drawer,{transform:[{translateX:drawerAnim}]}]}>
-        <View style={s.drawerHeader}>
-          <View style={s.drawerMapBg}>
-            {Array.from({length:8}).map((_,i)=>(
-              <View key={`h${i}`} style={[s.dgH,{top:`${(i/8)*100}%` as any}]}/>
-            ))}
-            <View style={s.drawerFrost}/>
-          </View>
-          <View style={s.drawerAvatar}>
-            {profile?.avatar_emoji
-              ? <Text style={{fontSize:30}}>{profile.avatar_emoji}</Text>
-              : <Text style={s.drawerAvatarTxt}>{getInitials()}</Text>
-            }
-          </View>
-          <Text style={s.drawerName}>{profile?.display_name||`${profile?.first_name||''} ${profile?.last_name||''}`}</Text>
-          <Text style={s.drawerEmail}>{email}</Text>
-          <View style={s.drawerBadge}><Text style={s.drawerBadgeTxt}>Active</Text></View>
-        </View>
-
-        <ScrollView style={s.drawerNav} showsVerticalScrollIndicator={false}>
-          {navItems.map((item) => (
-            <TouchableOpacity key={item.screen}
-              style={[s.navItem, activeScreen===item.screen && s.navItemActive]}
-              onPress={() => navigate(item.screen)}>
-              <View style={[s.navIconBox, activeScreen===item.screen && {backgroundColor:TEAL+'18'}]}>
-                {item.icon(activeScreen === item.screen)}
-              </View>
-              <Text style={[s.navLabel, activeScreen===item.screen && s.navLabelActive]}>
-                {item.label}
-              </Text>
-              {activeScreen===item.screen && <View style={s.navActiveBar}/>}
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        <View style={s.drawerFooter}>
-          <TouchableOpacity style={s.drawerSignOut} onPress={handleSignOut}>
-            {Icons.signout(MID, 16)}
-            <Text style={s.drawerSignOutTxt}>Sign Out</Text>
-          </TouchableOpacity>
-          <Text style={s.drawerVersion}>SPLITWI$E v1.0.0</Text>
-        </View>
+        <SidebarContents/>
       </Animated.View>
 
-      {/* Floating AI Chatbot */}
       {botOpen && (
         <Animated.View style={[s.botWindow,{
           opacity: botOpacity,
@@ -667,7 +720,6 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
         </Animated.View>
       )}
 
-      {/* FAB */}
       <TouchableOpacity style={s.botFab} onPress={toggleBot} activeOpacity={0.85}>
         <View style={s.botFabInner}>
           {botOpen ? Icons.close(WHITE, 20) : Icons.bot(WHITE, 22)}
@@ -687,6 +739,11 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
 // ══════════════════════════════════════════════════════════════
 const s = StyleSheet.create({
   root: { flex:1, backgroundColor:BG },
+
+  // Web layout
+  webRoot:    { flex:1, flexDirection:'row', backgroundColor:BG },
+  webSidebar: { width:260, backgroundColor:WHITE, borderRightWidth:1, borderRightColor:LIGHT_BORDER, flexDirection:'column' as any },
+  webMain:    { flex:1, flexDirection:'column' as any },
   mapBg:  { position:'absolute',top:0,left:0,right:0,bottom:0,backgroundColor:'#F0FCFC',overflow:'hidden' },
   gH:     { position:'absolute',left:0,right:0,height:1,backgroundColor:'#17B8B80E' },
   gV:     { position:'absolute',top:0,bottom:0,width:1,backgroundColor:'#17B8B809' },
@@ -697,7 +754,7 @@ const s = StyleSheet.create({
   wm:     { position:'absolute',alignSelf:'center',top:'18%',fontSize:Platform.OS==='web'?120:68,fontWeight:'900',color:TEAL+'07',letterSpacing:-4,textAlign:'center',width:'100%',zIndex:0 },
 
   main:          { flex:1 },
-  topBar:        { flexDirection:'row',alignItems:'center',paddingHorizontal:20,paddingTop:Platform.OS==='ios'?54:40,paddingBottom:14,backgroundColor:WHITE,borderBottomWidth:1,borderBottomColor:LIGHT_BORDER,zIndex:10,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:3 },
+  topBar:        { flexDirection:'row',alignItems:'center',paddingHorizontal:20,paddingTop:Platform.OS==='web'?14:Platform.OS==='ios'?54:40,paddingBottom:14,backgroundColor:WHITE,borderBottomWidth:1,borderBottomColor:LIGHT_BORDER,zIndex:10,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:3 },
   menuBtn:       { gap:5,padding:4 },
   menuLine:      { width:22,height:2.5,borderRadius:2,backgroundColor:DARK },
   topBarTitle:   { flex:1,textAlign:'center',fontSize:16,fontWeight:'800',color:DARK,letterSpacing:0.3 },
@@ -707,7 +764,7 @@ const s = StyleSheet.create({
   overlay:       { position:'absolute',top:0,left:0,right:0,bottom:0,backgroundColor:'rgba(6,32,32,0.45)',zIndex:20 },
 
   drawer:          { position:'absolute',top:0,left:0,bottom:0,width:DRAWER_WIDTH,backgroundColor:WHITE,zIndex:30,shadowColor:'#000',shadowOffset:{width:4,height:0},shadowOpacity:0.15,shadowRadius:20,elevation:20 },
-  drawerHeader:    { paddingTop:Platform.OS==='ios'?54:40,paddingBottom:24,paddingHorizontal:24,backgroundColor:TEAL_DEEP,overflow:'hidden' },
+  drawerHeader:    { paddingTop:Platform.OS==='web'?24:Platform.OS==='ios'?54:40,paddingBottom:24,paddingHorizontal:24,backgroundColor:TEAL_DEEP,overflow:'hidden' },
   drawerMapBg:     { position:'absolute',top:0,left:0,right:0,bottom:0,overflow:'hidden' },
   dgH:             { position:'absolute',left:0,right:0,height:1,backgroundColor:'#FFFFFF15' },
   drawerFrost:     { position:'absolute',top:0,left:0,right:0,bottom:0,backgroundColor:'#0A6E6E88' },
