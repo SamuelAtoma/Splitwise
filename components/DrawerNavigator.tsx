@@ -567,9 +567,7 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
   const botOpacity = botAnim;
   const botTransY  = botAnim.interpolate({ inputRange:[0,1], outputRange:[20,0] });
 
-  const isWeb = Platform.OS === 'web';
-
-  // Shared sidebar contents (used both in web permanent sidebar and mobile drawer)
+  // Shared sidebar contents
   const SidebarContents = () => (
     <>
       <View style={s.drawerHeader}>
@@ -616,77 +614,10 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
     </>
   );
 
-  // Main screen content
-  const ScreenContent = () => (
-    <View style={s.screenContent}>
-      {activeScreen === 'Home' && (
-        <HomeScreen profile={profile} email={email} onNavigate={navigate}/>
-      )}
-      {activeScreen === 'Map' && (
-        <MapScreenComponent onOpenChat={handleOpenChat}/>
-      )}
-      {activeScreen === 'Groups' && (
-        <GroupOrdersScreen onOpenChat={handleOpenChat}/>
-      )}
-      {activeScreen === 'Chat' && (
-        <ChatScreen groupId={activeChatId}/>
-      )}
-      {activeScreen === 'Profile' && (
-        <ProfileScreen profile={profile} email={email} onSignOut={handleSignOut}/>
-      )}
-    </View>
-  );
-
-  // ── WEB: permanent sidebar layout ──────────────────────────
-  if (isWeb) {
-    return (
-      <View style={s.webRoot}>
-        {/* Permanent sidebar */}
-        <View style={s.webSidebar}>
-          <SidebarContents/>
-        </View>
-
-        {/* Main area */}
-        <View style={s.webMain}>
-          <View style={s.topBar}>
-            <View style={{width:28}}/>
-            <Text style={s.topBarTitle}>{screenTitles[activeScreen]}</Text>
-            <View style={s.topBarRight}>
-              <Text style={s.topBarLogo}>SPLITWI<Text style={{color:TEAL_DARK}}>$</Text>E</Text>
-            </View>
-          </View>
-          <ScreenContent/>
-        </View>
-
-        {/* Floating AI Chatbot */}
-        {botOpen && (
-          <Animated.View style={[s.botWindow,{
-            opacity: botOpacity,
-            transform: [{ scale: botScale }, { translateY: botTransY }],
-          }]}>
-            <AIChatbot onClose={toggleBot}/>
-          </Animated.View>
-        )}
-
-        {/* FAB */}
-        <TouchableOpacity style={s.botFab} onPress={toggleBot} activeOpacity={0.85}>
-          <View style={s.botFabInner}>
-            {botOpen ? Icons.close(WHITE, 20) : Icons.bot(WHITE, 22)}
-          </View>
-          {!botOpen && (
-            <View style={s.botFabBadge}>
-              <Text style={s.botFabBadgeTxt}>AI</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  // ── MOBILE: animated sliding drawer ────────────────────────
   return (
     <View style={s.root}>
       <View style={s.main}>
+        {/* Top bar */}
         <View style={s.topBar}>
           <TouchableOpacity onPress={openDrawer} style={s.menuBtn}>
             <View style={s.menuLine}/>
@@ -698,19 +629,40 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
             <Text style={s.topBarLogo}>SPLITWI<Text style={{color:TEAL_DARK}}>$</Text>E</Text>
           </View>
         </View>
-        <ScreenContent/>
+
+        {/* Screens */}
+        <View style={s.screenContent}>
+          {activeScreen === 'Home' && (
+            <HomeScreen profile={profile} email={email} onNavigate={navigate}/>
+          )}
+          {activeScreen === 'Map' && (
+            <MapScreenComponent onOpenChat={handleOpenChat}/>
+          )}
+          {activeScreen === 'Groups' && (
+            <GroupOrdersScreen onOpenChat={handleOpenChat}/>
+          )}
+          {activeScreen === 'Chat' && (
+            <ChatScreen groupId={activeChatId}/>
+          )}
+          {activeScreen === 'Profile' && (
+            <ProfileScreen profile={profile} email={email} onSignOut={handleSignOut}/>
+          )}
+        </View>
       </View>
 
+      {/* Drawer overlay */}
       {drawerOpen && (
         <Animated.View style={[s.overlay,{opacity:overlayAnim}]} pointerEvents="auto">
           <TouchableOpacity style={{flex:1}} onPress={closeDrawer} activeOpacity={1}/>
         </Animated.View>
       )}
 
+      {/* Sliding drawer */}
       <Animated.View style={[s.drawer,{transform:[{translateX:drawerAnim}]}]}>
         <SidebarContents/>
       </Animated.View>
 
+      {/* Floating AI Chatbot */}
       {botOpen && (
         <Animated.View style={[s.botWindow,{
           opacity: botOpacity,
@@ -720,6 +672,7 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
         </Animated.View>
       )}
 
+      {/* FAB */}
       <TouchableOpacity style={s.botFab} onPress={toggleBot} activeOpacity={0.85}>
         <View style={s.botFabInner}>
           {botOpen ? Icons.close(WHITE, 20) : Icons.bot(WHITE, 22)}
@@ -741,9 +694,6 @@ const s = StyleSheet.create({
   root: { flex:1, backgroundColor:BG },
 
   // Web layout
-  webRoot:    { flex:1, flexDirection:'row', backgroundColor:BG },
-  webSidebar: { width:260, backgroundColor:WHITE, borderRightWidth:1, borderRightColor:LIGHT_BORDER, flexDirection:'column' as any },
-  webMain:    { flex:1, flexDirection:'column' as any },
   mapBg:  { position:'absolute',top:0,left:0,right:0,bottom:0,backgroundColor:'#F0FCFC',overflow:'hidden' },
   gH:     { position:'absolute',left:0,right:0,height:1,backgroundColor:'#17B8B80E' },
   gV:     { position:'absolute',top:0,bottom:0,width:1,backgroundColor:'#17B8B809' },
