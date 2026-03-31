@@ -14,24 +14,12 @@ type Screen = 'loading' | 'onboarding' | 'signup' | 'signin' | 'profile_setup' |
 export default function App() {
   const [screen, setScreen] = useState<Screen>('loading');
 
-  // Hide the landing-page loading overlay once the React app has a real screen
-  useEffect(() => {
-    if (screen !== 'loading' && typeof window !== 'undefined') {
-      (window as any).__appReady?.();
-    }
-  }, [screen]);
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         checkProfileSetup(session.user.id);
       } else {
-        // Respect the screen requested by the landing page (e.g. "Sign In" button)
-        const startAt = typeof window !== 'undefined'
-          ? sessionStorage.getItem('sw_start')
-          : null;
-        sessionStorage.removeItem('sw_start');
-        setScreen(startAt === 'signin' ? 'signin' : 'onboarding');
+        setScreen('onboarding');
       }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
