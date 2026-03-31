@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase';
 import MapScreenComponent from './MapScreen';
 import GroupOrdersScreen from './GroupOrdersScreen';
 import ChatScreen from './ChatScreen';
+import FCCPCScreen from './FCCPCScreen';
 
 const TEAL       = '#17B8B8';
 const TEAL_DARK  = '#0D8F8F';
@@ -19,7 +20,7 @@ const LIGHT_BORDER = '#C8E8E8';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const DRAWER_WIDTH = Math.min(300, SCREEN_WIDTH * 0.78);
 
-type ScreenName = 'Home' | 'Map' | 'Groups' | 'Chat' | 'Profile';
+type ScreenName = 'Home' | 'Map' | 'Groups' | 'Chat' | 'Profile' | 'FCCPC';
 
 // ══════════════════════════════════════════════════════════════
 // SVG ICON SYSTEM
@@ -54,6 +55,7 @@ const Icons = {
   tip:     (s: string, sz=24) => <Svg size={sz} stroke={s}><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 017 7c0 2.5-1.3 4.7-3.3 6L15 17H9l-.7-2C6.3 13.7 5 11.5 5 9a7 7 0 017-7z"/></Svg>,
   check:   (s: string, sz=16) => <Svg size={sz} stroke={s}><polyline points="20 6 9 17 4 12"/></Svg>,
   activity:(s: string, sz=24) => <Svg size={sz} stroke={s}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></Svg>,
+  shield:  (s: string, sz=24) => <Svg size={sz} stroke={s}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></Svg>,
   market:  (s: string, sz=24) => <Svg size={sz} stroke={s}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><rect x="9" y="12" width="6" height="9" rx="1"/></Svg>,
 };
 
@@ -248,6 +250,7 @@ function HomeScreen({ profile, email, onNavigate }: {
     { icon: Icons.groups('#6D28D9', 22), label:'Create\nGroup',  sub:'Start a group order',      bg:'#EDE9FE', stroke:'#6D28D9', screen:'Groups' as ScreenName },
     { icon: Icons.cart('#B45309', 22),   label:'Browse\nOrders', sub:'View active group orders', bg:'#FEF3C7', stroke:'#B45309', screen:'Groups' as ScreenName },
     { icon: Icons.chat('#065F46', 22),   label:'Open\nChat',     sub:'Chat with your group',     bg:'#ECFDF5', stroke:'#065F46', screen:'Chat'   as ScreenName },
+    { icon: Icons.shield('#C53030', 22), label:'Report\nScam',   sub:'Contact FCCPC for help',   bg:'#FFF5F5', stroke:'#C53030', screen:'FCCPC'  as ScreenName },
   ];
 
   const tips = [
@@ -485,12 +488,13 @@ function ProfileScreen({ profile, email, onSignOut }: {
 // ══════════════════════════════════════════════════════════════
 // NAV ITEMS
 // ══════════════════════════════════════════════════════════════
-const navItems: { screen: ScreenName; icon: (active: boolean) => any; label: string }[] = [
-  { screen:'Home',    icon: a => Icons.home(   a?TEAL_DARK:MID, 18), label:'Home'         },
-  { screen:'Map',     icon: a => Icons.map(    a?TEAL_DARK:MID, 18), label:'Nearby Map'   },
-  { screen:'Groups',  icon: a => Icons.groups( a?TEAL_DARK:MID, 18), label:'Group Orders' },
-  { screen:'Chat',    icon: a => Icons.chat(   a?TEAL_DARK:MID, 18), label:'In-App Chat'  },
-  { screen:'Profile', icon: a => Icons.profile(a?TEAL_DARK:MID, 18), label:'My Profile'   },
+const navItems: { screen: ScreenName; icon: (active: boolean) => any; label: string; accent?: string }[] = [
+  { screen:'Home',    icon: a => Icons.home(   a?TEAL_DARK:MID, 18), label:'Home'            },
+  { screen:'Map',     icon: a => Icons.map(    a?TEAL_DARK:MID, 18), label:'Nearby Map'      },
+  { screen:'Groups',  icon: a => Icons.groups( a?TEAL_DARK:MID, 18), label:'Group Orders'    },
+  { screen:'Chat',    icon: a => Icons.chat(   a?TEAL_DARK:MID, 18), label:'In-App Chat'     },
+  { screen:'Profile', icon: a => Icons.profile(a?TEAL_DARK:MID, 18), label:'My Profile'      },
+  { screen:'FCCPC',   icon: a => Icons.shield( a?'#C53030':'#E53E3E', 18), label:'Report a Scam', accent:'#C53030' },
 ];
 
 // ══════════════════════════════════════════════════════════════
@@ -560,7 +564,7 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
 
   const screenTitles: Record<ScreenName,string> = {
     Home:'Dashboard', Map:'Nearby Map', Groups:'Group Orders',
-    Chat:'In-App Chat', Profile:'My Profile',
+    Chat:'In-App Chat', Profile:'My Profile', FCCPC:'Consumer Protection',
   };
 
   const botScale   = botAnim.interpolate({ inputRange:[0,1], outputRange:[0.85,1] });
@@ -589,19 +593,23 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
       </View>
 
       <ScrollView style={s.drawerNav} showsVerticalScrollIndicator={false}>
-        {navItems.map((item) => (
-          <TouchableOpacity key={item.screen}
-            style={[s.navItem, activeScreen===item.screen && s.navItemActive]}
-            onPress={() => navigate(item.screen)}>
-            <View style={[s.navIconBox, activeScreen===item.screen && {backgroundColor:TEAL+'18'}]}>
-              {item.icon(activeScreen === item.screen)}
-            </View>
-            <Text style={[s.navLabel, activeScreen===item.screen && s.navLabelActive]}>
-              {item.label}
-            </Text>
-            {activeScreen===item.screen && <View style={s.navActiveBar}/>}
-          </TouchableOpacity>
-        ))}
+        {navItems.map((item) => {
+          const isActive = activeScreen === item.screen;
+          const isRed = item.screen === 'FCCPC';
+          return (
+            <TouchableOpacity key={item.screen}
+              style={[s.navItem, isActive && (isRed ? s.navItemActiveRed : s.navItemActive)]}
+              onPress={() => navigate(item.screen)}>
+              <View style={[s.navIconBox, isActive && {backgroundColor: isRed ? '#C5303018' : TEAL+'18'}]}>
+                {item.icon(isActive)}
+              </View>
+              <Text style={[s.navLabel, isActive && (isRed ? s.navLabelActiveRed : s.navLabelActive)]}>
+                {item.label}
+              </Text>
+              {isActive && <View style={[s.navActiveBar, isRed && {backgroundColor:'#C53030'}]}/>}
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
 
       <View style={s.drawerFooter}>
@@ -646,6 +654,9 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
           )}
           {activeScreen === 'Profile' && (
             <ProfileScreen profile={profile} email={email} onSignOut={handleSignOut}/>
+          )}
+          {activeScreen === 'FCCPC' && (
+            <FCCPCScreen/>
           )}
         </View>
       </View>
@@ -729,7 +740,9 @@ const s = StyleSheet.create({
   navItemActive:   { backgroundColor:TEAL+'08' },
   navIconBox:      { width:34,height:34,borderRadius:8,alignItems:'center',justifyContent:'center',backgroundColor:TEAL+'08' },
   navLabel:        { fontSize:14,fontWeight:'600',color:MID },
-  navLabelActive:  { color:TEAL_DEEP,fontWeight:'800' },
+  navLabelActive:      { color:TEAL_DEEP,fontWeight:'800' },
+  navItemActiveRed:    { backgroundColor:'#C5303008' },
+  navLabelActiveRed:   { color:'#C53030',fontWeight:'800' },
   navActiveBar:    { position:'absolute',left:0,top:8,bottom:8,width:3,borderRadius:2,backgroundColor:TEAL_DARK },
   drawerFooter:    { padding:20,borderTopWidth:1,borderTopColor:LIGHT_BORDER },
   drawerSignOut:   { flexDirection:'row',alignItems:'center',gap:10,paddingVertical:12,paddingHorizontal:16,borderRadius:10,borderWidth:1,borderColor:LIGHT_BORDER,marginBottom:12 },

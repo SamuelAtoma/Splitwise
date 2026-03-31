@@ -49,11 +49,14 @@ const iconPaths: Record<string, string[]> = {
     'M11 13l5 5-5 5',
     'M6 18h8',
   ],
+  shield: [
+    'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+  ],
 };
 
 function SlideIcon({ name }: { name: string }) {
   const fallback: Record<string, string> = {
-    cart: '🛒', map: '📍', chat: '💬', split: '✂️',
+    cart: '🛒', map: '📍', chat: '💬', split: '✂️', shield: '🛡️',
   };
 
   if (Platform.OS === 'web') {
@@ -122,6 +125,13 @@ const slides = [
     subtitle: 'Join a growing community of smart shoppers in your area. Browse groups, discover who\'s ordering nearby, and start connecting in seconds.',
     chips: ['Join a group', 'Chat freely', 'Order smarter'],
     stats: [{ k: 'shoppers', l: 'Active\nShoppers' }, { k: 'markets', l: 'Online\nMarkets' }],
+  },
+  {
+    step: '05', tag: 'PROTECTED', icon: 'shield',
+    title: 'Got Scammed?\nReport It.',
+    subtitle: 'Fake product? Order never arrived? The FCCPC — Nigeria\'s official consumer protection body — is here for you. File a complaint free of charge and get justice.',
+    chips: ['Free to report', 'Government backed', 'Nationwide'],
+    stats: [{ k: 'markets', l: 'Markets\nCovered' }, { k: 'cities', l: 'Offices\nNationwide' }],
   },
 ];
 
@@ -203,7 +213,7 @@ export default function Onboarding({ onFinish }: Props) {
         <Text style={s.logo}>SPLITWI<Text style={{ color: WHITE + 'AA' }}>$</Text>E</Text>
         <View style={{ flex: 1 }} />
         <View style={s.stepPill}>
-          <Text style={s.stepTxt}>{slide.step} / 04</Text>
+          <Text style={s.stepTxt}>{slide.step} / 05</Text>
         </View>
         {!isLast && (
           <TouchableOpacity onPress={onFinish}
