@@ -260,30 +260,33 @@ function HomeScreen({ profile, email, onNavigate }: {
   ];
 
   const markets = ['Jumia','Konga','Amazon','Jiji','Temu','Aliexpress','Slot','& many more...'];
+
+  // Inject CSS keyframe for web — true seamless loop, no JS timer
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const el = document.createElement('style');
+    el.id = 'sw-marquee';
+    el.textContent = `@keyframes swMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }`;
+    document.head.appendChild(el);
+    return () => el.remove();
+  }, []);
+
+  // Native fallback: Animated loop measured from real layout
   const marqueeX = useRef(new Animated.Value(0)).current;
   const marqueeAnim = useRef<Animated.CompositeAnimation | null>(null);
   const halfWidth = useRef(0);
-
-  const startMarquee = (w: number) => {
-    marqueeX.setValue(0);
-    marqueeAnim.current = Animated.loop(
-      Animated.timing(marqueeX, {
-        toValue: -w,
-        duration: w * 14,
-        useNativeDriver: false,
-      })
-    );
-    marqueeAnim.current.start();
-  };
-
   const onMarqueeLayout = (e: any) => {
+    if (Platform.OS === 'web') return;
     const w = e.nativeEvent.layout.width / 2;
     if (halfWidth.current === 0 && w > 0) {
       halfWidth.current = w;
-      startMarquee(w);
+      marqueeX.setValue(0);
+      marqueeAnim.current = Animated.loop(
+        Animated.timing(marqueeX, { toValue: -w, duration: w * 14, useNativeDriver: false })
+      );
+      marqueeAnim.current.start();
     }
   };
-
   useEffect(() => () => { marqueeAnim.current?.stop(); }, []);
 
   return (
@@ -373,16 +376,34 @@ function HomeScreen({ profile, email, onNavigate }: {
 
       <Text style={s.sectionHead}>Supported Markets</Text>
       <View style={s.marketsMarqueeWrap}>
-        <Animated.View onLayout={onMarqueeLayout} style={[s.marketsMarqueeRow, { transform: [{ translateX: marqueeX }] }]}>
-          {[...markets, ...markets].map((m, i) => (
-            m === '& many more...'
-              ? <View key={i} style={[s.marketPill, s.marketPillMore]}><Text style={s.marketPillMoreTxt}>{m}</Text></View>
-              : <View key={i} style={s.marketPill}>
-                  <View style={s.marketPillIcon}>{Icons.market(TEAL_DEEP, 11)}</View>
-                  <Text style={s.marketPillTxt}>{m}</Text>
-                </View>
-          ))}
-        </Animated.View>
+        {Platform.OS === 'web' ? (
+          <View style={[s.marketsMarqueeRow, {
+            animationName: 'swMarquee',
+            animationDuration: '18s',
+            animationTimingFunction: 'linear',
+            animationIterationCount: 'infinite',
+          } as any]}>
+            {[...markets, ...markets].map((m, i) => (
+              m === '& many more...'
+                ? <View key={i} style={[s.marketPill, s.marketPillMore]}><Text style={s.marketPillMoreTxt}>{m}</Text></View>
+                : <View key={i} style={s.marketPill}>
+                    <View style={s.marketPillIcon}>{Icons.market(TEAL_DEEP, 11)}</View>
+                    <Text style={s.marketPillTxt}>{m}</Text>
+                  </View>
+            ))}
+          </View>
+        ) : (
+          <Animated.View onLayout={onMarqueeLayout} style={[s.marketsMarqueeRow, { transform: [{ translateX: marqueeX }] }]}>
+            {[...markets, ...markets].map((m, i) => (
+              m === '& many more...'
+                ? <View key={i} style={[s.marketPill, s.marketPillMore]}><Text style={s.marketPillMoreTxt}>{m}</Text></View>
+                : <View key={i} style={s.marketPill}>
+                    <View style={s.marketPillIcon}>{Icons.market(TEAL_DEEP, 11)}</View>
+                    <Text style={s.marketPillTxt}>{m}</Text>
+                  </View>
+            ))}
+          </Animated.View>
+        )}
       </View>
 
       <Text style={s.sectionHead}>Account Status</Text>
