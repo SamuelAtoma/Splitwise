@@ -609,12 +609,12 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
   }, []);
 
   useEffect(() => {
-    if (location && selectedMarket) {
+    if (location) {
       fetchNearbyUsers();
       const interval = setInterval(fetchNearbyUsers, 15000);
       return () => clearInterval(interval);
     }
-  }, [location, selectedMarket, radius]);
+  }, [location, radius]);
 
   const init = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -721,11 +721,10 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
   };
 
   const fetchNearbyUsers = async () => {
-    if (!location || !selectedMarket) return;
+    if (!location) return;
     const { data } = await supabase
       .from('map_sessions')
       .select(`*, profile:profiles(first_name, last_name, avatar_emoji)`)
-      .eq('market_name', selectedMarket.name)
       .neq('user_id', currentUser?.id || '');
     if (!data) return;
     const nearby = data.filter((u: any) =>

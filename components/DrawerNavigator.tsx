@@ -110,21 +110,62 @@ interface ChatMessage { role: 'user' | 'assistant'; content: string; }
 
 function getLocalResponse(question: string): string {
   const q = question.toLowerCase();
-  if (q.includes('market') || q.includes('jumia') || q.includes('konga') || q.includes('support'))
-    return "SPLITWI$E supports: **Jumia, Konga, Amazon, Jiji, Temu, Aliexpress, Shoprite, and Slot**. You can also add custom markets! 🛒";
-  if (q.includes('split') || q.includes('work') || q.includes('how'))
-    return "Here's how SPLITWI$E works:\n\n1️⃣ **Go to Map** — select your market & set radius\n2️⃣ **Go Live** — appear on the map\n3️⃣ **Connect** — tap a nearby shopper pin\n4️⃣ **Split** — divide the delivery fee equally\n\nExample: ₦2,000 delivery ÷ 5 people = ₦400 each! 💰";
-  if (q.includes('save') || q.includes('much') || q.includes('money') || q.includes('cost'))
-    return "Save up to **80% on delivery fees**! 🎉\n\n• Solo: ₦2,000\n• 5 people: ₦400 each\n• 10 people: ₦200 each\n\nThe more members, the more everyone saves!";
-  if (q.includes('live') || q.includes('map') || q.includes('appear'))
-    return "To go live:\n\n1. Tap **Nearby Map**\n2. Select your market\n3. Set your radius (1-20km)\n4. Tap **Go Live** 🟢\n\nYou'll appear as a pin and nearby shoppers can find you!";
-  if (q.includes('group') || q.includes('create') || q.includes('chat') || q.includes('join'))
-    return "To create or join a group:\n\n• **On the map**: tap a nearby shopper pin → group chat created instantly\n• **Group Orders**: create a new group and invite others\n• Groups work best with 3-10 people from the same market! 👥";
-  if (q.includes('pay') || q.includes('payment'))
-    return "SPLITWI$E focuses on **coordination, not payments**. Payment coordination is done directly between members via bank transfer, cash, etc. 💳";
-  if (q.includes('hello') || q.includes('hi') || q.includes('hey'))
-    return "Hello! 👋 Welcome to SPLITWI$E! Ask me about:\n• How group splitting works\n• Supported markets\n• How to go live on the map\n• How much you can save!";
-  return "SPLITWI$E helps Nigerians save on delivery fees by connecting nearby shoppers from the same market.\n\n• Go live on the map to find nearby shoppers\n• Split delivery fees with your group\n• The more members, the more you save! 😊";
+
+  if (q.includes('hello') || q.includes('hi') || q.includes('hey') || q.includes('good morning') || q.includes('good afternoon') || q.includes('good evening'))
+    return "Hello! 👋 I'm the SPLITWI$E assistant. I can help you with:\n\n• How group ordering works\n• Supported markets\n• Going live on the map\n• Saving on delivery fees\n• Reporting scams (FCCPC)\n\nWhat would you like to know?";
+
+  if (q.includes('fccpc') || q.includes('scam') || q.includes('fake') || q.includes('report') || q.includes('consumer') || q.includes('cheat') || q.includes('fraud') || q.includes('deceiv'))
+    return "If you've been scammed by an online market, you can **report it to the FCCPC** — Nigeria's official consumer protection body.\n\n📞 Toll-free: +234 800 000 2121\n📧 contact@fccpc.gov.ng\n🌐 complaints.fccpc.gov.ng\n\nReporting is **free** and government-backed. Tap **Report a Scam** in the sidebar to access the full guide.";
+
+  if (q.includes('market') || q.includes('jumia') || q.includes('konga') || q.includes('amazon') || q.includes('jiji') || q.includes('temu') || q.includes('aliexpress') || q.includes('slot') || q.includes('support'))
+    return "SPLITWI$E supports all major Nigerian online markets:\n\n🛒 Jumia · Konga · Amazon\n📦 Jiji · Temu · Aliexpress · Slot\n\nYou can also **add any custom market** not listed — just type the name when selecting a market!";
+
+  if ((q.includes('how') && q.includes('work')) || q.includes('explain') || q.includes('what is splitwise') || q.includes('what is splitwi'))
+    return "Here's how SPLITWI$E works:\n\n1️⃣ **Select a market** (Jumia, Amazon, etc.)\n2️⃣ **Go to Map** — set your delivery radius\n3️⃣ **Go Live** — your pin appears on the map\n4️⃣ **Connect** — tap a nearby shopper's pin\n5️⃣ **Split** — share one delivery, divide the fee\n\nExample: ₦2,000 delivery ÷ 5 people = **₦400 each!** 💰";
+
+  if (q.includes('save') || q.includes('discount') || q.includes('cheap') || q.includes('cost') || (q.includes('how') && q.includes('much')))
+    return "You can save **up to 80% on delivery fees!** 🎉\n\n| Group size | Delivery (₦2,000) |\n|------------|-------------------|\n| Solo       | ₦2,000            |\n| 2 people   | ₦1,000 each       |\n| 5 people   | ₦400 each         |\n| 10 people  | ₦200 each         |\n\nThe bigger the group, the more everyone saves!";
+
+  if (q.includes('go live') || q.includes('appear') || q.includes('show on map') || (q.includes('how') && q.includes('map')))
+    return "To appear on the map:\n\n1. Tap **Nearby Map** from the dashboard\n2. Select your market from the list\n3. Set your search radius (1–20km)\n4. Tap the **Go Live** button 🟢\n\nYou'll appear as a pin. Nearby shoppers from any market can see you and connect!";
+
+  if (q.includes('radius') || q.includes('distance') || q.includes('km') || q.includes('area') || q.includes('range'))
+    return "The **radius** controls how far away you can see other shoppers:\n\n• 1km — your immediate street\n• 3km — your neighbourhood (default)\n• 5–10km — your local area\n• 20km — across your city\n\nStart with 3km and expand if no one is nearby.";
+
+  if (q.includes('group') || q.includes('create group') || q.includes('join') || q.includes('pool'))
+    return "To start a group:\n\n• **Map**: tap any shopper's pin → choose 'Create Group' or 'Private Chat'\n• **Group Orders**: tap '+ New Group' to create one manually\n\nGroups work best with **3–10 people**. The chat is where you coordinate what to order, then one person places the combined order. 👥";
+
+  if (q.includes('chat') || q.includes('message') || q.includes('talk') || q.includes('communicate'))
+    return "SPLITWI$E has a built-in group chat for each order pool.\n\n• Tap a shopper pin on the map to open a chat\n• Use the **Chat** tab to see all your active conversations\n• Coordinate your orders, confirm items, then split the delivery fee once the order is placed.";
+
+  if (q.includes('pay') || q.includes('payment') || q.includes('transfer') || q.includes('money') || q.includes('naira'))
+    return "SPLITWI$E handles **coordination, not payments**.\n\nAfter agreeing on the order, members pay each other directly via:\n• Bank transfer (GTBank, Access, Opay, etc.)\n• Cash\n• Mobile money\n\nUse the chat to confirm who paid and who owes what.";
+
+  if (q.includes('delivery') || q.includes('ship') || q.includes('logistics'))
+    return "Delivery works like this:\n\n1. Your group places **one combined order** on the market (e.g. Jumia)\n2. Items are delivered to **one address** (or split by arrangement)\n3. The delivery fee is divided equally among group members\n\nThis beats paying full delivery alone every time! 📦";
+
+  if (q.includes('sign up') || q.includes('register') || q.includes('account') || q.includes('profile'))
+    return "To create an account:\n\n1. Open SPLITWI$E\n2. Tap **Get Started**\n3. Enter your email and create a password\n4. Complete your profile (name, avatar emoji, phone)\n\nYou're ready to start saving! 🎯";
+
+  if (q.includes('profile') || q.includes('avatar') || q.includes('name') || q.includes('edit'))
+    return "To update your profile:\n\n• Tap the **Profile** option in the sidebar menu\n• Update your name, phone number, or avatar emoji\n\nYour name and emoji appear on the map so other shoppers can identify you!";
+
+  if (q.includes('safe') || q.includes('trust') || q.includes('secure') || q.includes('private'))
+    return "SPLITWI$E is designed with safety in mind:\n\n🔒 Secure login via email/password\n🗺️ You control when you go live and offline\n💬 In-app chat keeps communication private\n🛡️ FCCPC support if any market scams you\n\nAlways use the in-app chat and never share personal financial details with strangers.";
+
+  if (q.includes('offline') || q.includes('go offline') || q.includes('hide') || q.includes('stop'))
+    return "To go offline and hide from the map:\n\n• On the Map screen, tap **Go Offline**\n• Your pin is removed and you become invisible to other shoppers\n\nYou can go live again anytime you're ready to shop! 🔴";
+
+  if (q.includes('custom market') || q.includes('add market') || q.includes('other market') || q.includes('not listed'))
+    return "Don't see your market? **Add a custom one!**\n\n1. On the Map screen, tap the market selector\n2. Scroll down and tap **'+ Add Custom Market'**\n3. Type the market name and save\n\nYour custom market will appear on the map for others to join! ✨";
+
+  if (q.includes('nigeria') || q.includes('lagos') || q.includes('abuja') || q.includes('city') || q.includes('location'))
+    return "SPLITWI$E works **anywhere in Nigeria** 🇳🇬\n\nCurrently being used in Lagos, Abuja, Port Harcourt, and more cities. As long as you have nearby shoppers within your radius, you can form a group and save on delivery!";
+
+  if (q.includes('tip') || q.includes('advice') || q.includes('trick') || q.includes('best'))
+    return "Top tips to save more with SPLITWI$E:\n\n💡 Use a **3-5km radius** for best results\n🕐 Go live during **peak hours** (evenings & weekends)\n👥 Invite friends to join your pool in advance\n📍 The closer your group, the faster the delivery\n🔄 Check back regularly — new shoppers appear often!";
+
+  return "I'm here to help with SPLITWI$E! 😊\n\nYou can ask me about:\n• **How group splitting works**\n• **Supported markets** (Jumia, Konga, etc.)\n• **Going live on the map**\n• **Saving on delivery fees**\n• **Reporting scams to FCCPC**\n• **Payment coordination**\n\nWhat would you like to know?";
 }
 
 function AIChatbot({ onClose }: { onClose: () => void }) {
@@ -746,8 +787,8 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
         </Animated.View>
       )}
 
-      {/* FAB */}
-      <TouchableOpacity style={s.botFab} onPress={toggleBot} activeOpacity={0.85}>
+      {/* FAB — dashboard only */}
+      {activeScreen === 'Home' && <TouchableOpacity style={s.botFab} onPress={toggleBot} activeOpacity={0.85}>
         <View style={s.botFabInner}>
           {botOpen ? Icons.close(WHITE, 20) : Icons.bot(WHITE, 22)}
         </View>
@@ -756,7 +797,7 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
             <Text style={s.botFabBadgeTxt}>AI</Text>
           </View>
         )}
-      </TouchableOpacity>
+      </TouchableOpacity>}
     </View>
   );
 }
