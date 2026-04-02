@@ -261,20 +261,30 @@ function HomeScreen({ profile, email, onNavigate }: {
 
   const markets = ['Jumia','Konga','Amazon','Jiji','Temu','Aliexpress','Slot','& many more...'];
   const marqueeX = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const pillW = 120;
-    const totalW = markets.length * pillW;
+  const marqueeAnim = useRef<Animated.CompositeAnimation | null>(null);
+  const halfWidth = useRef(0);
+
+  const startMarquee = (w: number) => {
     marqueeX.setValue(0);
-    const anim = Animated.loop(
+    marqueeAnim.current = Animated.loop(
       Animated.timing(marqueeX, {
-        toValue: -totalW,
-        duration: markets.length * 2000,
+        toValue: -w,
+        duration: w * 14,
         useNativeDriver: false,
       })
     );
-    anim.start();
-    return () => anim.stop();
-  }, []);
+    marqueeAnim.current.start();
+  };
+
+  const onMarqueeLayout = (e: any) => {
+    const w = e.nativeEvent.layout.width / 2;
+    if (halfWidth.current === 0 && w > 0) {
+      halfWidth.current = w;
+      startMarquee(w);
+    }
+  };
+
+  useEffect(() => () => { marqueeAnim.current?.stop(); }, []);
 
   return (
     <ScrollView style={{flex:1}} contentContainerStyle={s.homeScroll} showsVerticalScrollIndicator={false}>
@@ -363,7 +373,7 @@ function HomeScreen({ profile, email, onNavigate }: {
 
       <Text style={s.sectionHead}>Supported Markets</Text>
       <View style={s.marketsMarqueeWrap}>
-        <Animated.View style={[s.marketsMarqueeRow, { transform: [{ translateX: marqueeX }] }]}>
+        <Animated.View onLayout={onMarqueeLayout} style={[s.marketsMarqueeRow, { transform: [{ translateX: marqueeX }] }]}>
           {[...markets, ...markets].map((m, i) => (
             m === '& many more...'
               ? <View key={i} style={[s.marketPill, s.marketPillMore]}><Text style={s.marketPillMoreTxt}>{m}</Text></View>
