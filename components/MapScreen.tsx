@@ -600,6 +600,7 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
   const [currentUser,     setCurrentUser]     = useState<any>(null);
   const [myProfile,       setMyProfile]       = useState<any>(null);
   const [isOnMap,         setIsOnMap]         = useState(false);
+  const heartbeatRef = useRef<any>(null);
 
   const radiusOptions = [1, 2, 3, 5, 10, 20];
 
@@ -722,10 +723,12 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
 
   const fetchNearbyUsers = async () => {
     if (!location) return;
+    const cutoff = new Date(Date.now() - 3 * 60 * 1000).toISOString(); // 3 min ago
     const { data } = await supabase
       .from('map_sessions')
       .select(`*, profile:profiles(first_name, last_name, avatar_emoji)`)
-      .neq('user_id', currentUser?.id || '');
+      .neq('user_id', currentUser?.id || '')
+      .gt('last_seen', cutoff);
     if (!data) return;
     const nearby = data.filter((u: any) =>
       distanceKm(location.lat, location.lng, u.lat, u.lng) <= radius
@@ -741,12 +744,19 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
       lat:         location.lat,
       lng:         location.lng,
       is_pooling:  false,
+      last_seen:   new Date().toISOString(),
     }).select().single();
     if (error) { console.error('goOnMap error:', error); return; }
     if (data) {
       setMySessionId(data.id);
       setIsOnMap(true);
       await fetchNearbyUsers();
+      // Heartbeat: update last_seen every 60s so we stay visible
+      heartbeatRef.current = setInterval(async () => {
+        await supabase.from('map_sessions')
+          .update({ last_seen: new Date().toISOString() })
+          .eq('id', data.id);
+      }, 60000);
     }
     await supabase.from('profiles').update({
       is_on_map:      true,
@@ -763,6 +773,7 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
   };
 
   const cleanupSession = async () => {
+    if (heartbeatRef.current) { clearInterval(heartbeatRef.current); heartbeatRef.current = null; }
     if (mySessionId) await supabase.from('map_sessions').delete().eq('id', mySessionId);
     if (currentUser) await supabase.from('profiles').update({ is_on_map:false }).eq('id', currentUser.id);
   };
