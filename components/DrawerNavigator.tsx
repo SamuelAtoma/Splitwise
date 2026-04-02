@@ -261,17 +261,27 @@ function HomeScreen({ profile, email, onNavigate }: {
 
   const markets = ['Jumia','Konga','Amazon','Jiji','Temu','Aliexpress','Slot','& many more...'];
 
-  // Inject CSS keyframe for web — true seamless loop, no JS timer
+  // Web: requestAnimationFrame — direct DOM, truly never stops
+  const marqueeRef = useRef<any>(null);
   useEffect(() => {
     if (Platform.OS !== 'web') return;
-    const el = document.createElement('style');
-    el.id = 'sw-marquee';
-    el.textContent = `@keyframes swMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }`;
-    document.head.appendChild(el);
-    return () => el.remove();
+    let pos = 0;
+    let rafId: number;
+    const tick = () => {
+      const el = marqueeRef.current;
+      if (el) {
+        const halfW = el.scrollWidth / 2;
+        pos += 0.5;
+        if (pos >= halfW) pos = 0;
+        el.style.transform = `translateX(-${pos}px)`;
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, []);
 
-  // Native fallback: Animated loop measured from real layout
+  // Native: Animated loop measured from layout
   const marqueeX = useRef(new Animated.Value(0)).current;
   const marqueeAnim = useRef<Animated.CompositeAnimation | null>(null);
   const halfWidth = useRef(0);
@@ -377,12 +387,7 @@ function HomeScreen({ profile, email, onNavigate }: {
       <Text style={s.sectionHead}>Supported Markets</Text>
       <View style={s.marketsMarqueeWrap}>
         {Platform.OS === 'web' ? (
-          <View style={[s.marketsMarqueeRow, {
-            animationName: 'swMarquee',
-            animationDuration: '18s',
-            animationTimingFunction: 'linear',
-            animationIterationCount: 'infinite',
-          } as any]}>
+          <View ref={marqueeRef} style={s.marketsMarqueeRow}>
             {[...markets, ...markets].map((m, i) => (
               m === '& many more...'
                 ? <View key={i} style={[s.marketPill, s.marketPillMore]}><Text style={s.marketPillMoreTxt}>{m}</Text></View>
