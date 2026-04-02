@@ -676,14 +676,28 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
       <View style={s.main}>
         {/* Top bar */}
         <View style={s.topBar}>
-          <TouchableOpacity onPress={openDrawer} style={s.menuBtn}>
-            <View style={s.menuLine}/>
-            <View style={[s.menuLine,{width:18}]}/>
-            <View style={s.menuLine}/>
-          </TouchableOpacity>
+          {activeScreen !== 'Home' ? (
+            <TouchableOpacity onPress={() => navigate('Home')} style={s.backBtn}>
+              <Text style={s.backBtnTxt}>← Back</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={openDrawer} style={s.menuBtn}>
+              <View style={s.menuLine}/>
+              <View style={[s.menuLine,{width:18}]}/>
+              <View style={s.menuLine}/>
+            </TouchableOpacity>
+          )}
           <Text style={s.topBarTitle}>{screenTitles[activeScreen]}</Text>
           <View style={s.topBarRight}>
-            <Text style={s.topBarLogo}>SPLITWI<Text style={{color:TEAL_DARK}}>$</Text>E</Text>
+            {activeScreen !== 'Home' ? (
+              <TouchableOpacity onPress={openDrawer} style={s.menuBtn}>
+                <View style={s.menuLine}/>
+                <View style={[s.menuLine,{width:18}]}/>
+                <View style={s.menuLine}/>
+              </TouchableOpacity>
+            ) : (
+              <Text style={s.topBarLogo}>SPLITWI<Text style={{color:TEAL_DARK}}>$</Text>E</Text>
+            )}
           </View>
         </View>
 
@@ -766,6 +780,8 @@ const s = StyleSheet.create({
   main:          { flex:1 },
   topBar:        { flexDirection:'row',alignItems:'center',paddingHorizontal:20,paddingTop:Platform.OS==='web'?14:Platform.OS==='ios'?54:40,paddingBottom:14,backgroundColor:WHITE,borderBottomWidth:1,borderBottomColor:LIGHT_BORDER,zIndex:10,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:3 },
   menuBtn:       { gap:5,padding:4 },
+  backBtn:       { paddingVertical:6,paddingRight:10 },
+  backBtnTxt:    { color:TEAL_DARK,fontSize:14,fontWeight:'800' },
   menuLine:      { width:22,height:2.5,borderRadius:2,backgroundColor:DARK },
   topBarTitle:   { flex:1,textAlign:'center',fontSize:16,fontWeight:'800',color:DARK,letterSpacing:0.3 },
   topBarRight:   { minWidth:80,alignItems:'flex-end' },

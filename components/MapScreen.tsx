@@ -125,11 +125,13 @@ const svgPin = (color: string) => `
 // ══════════════════════════════════════════════════════════════
 // WEB MAP
 // ══════════════════════════════════════════════════════════════
-function WebMap({ location, mapUsers, radius, onUserTap }: {
+function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMarket }: {
   location: { lat: number; lng: number };
   mapUsers: MapUser[];
   radius: number;
   onUserTap: (user: MapUser) => void;
+  myProfile: any;
+  selectedMarket: any;
 }) {
   const mapContainerRef = useRef<any>(null);
   const mapRef          = useRef<any>(null);
@@ -168,15 +170,19 @@ function WebMap({ location, mapUsers, radius, onUserTap }: {
         map.addLayer({ id:'radius-border', type:'line', source:'radius', paint:{ 'line-color':TEAL, 'line-width':1.5, 'line-dasharray':[3,3] } });
 
         const myEl = document.createElement('div');
+        const myEmoji = myProfile?.avatar_emoji || '';
+        const myName  = myProfile?.first_name   || 'You';
+        const myMkt   = selectedMarket?.name     || '';
         myEl.innerHTML = `
-          <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+            ${myMkt ? `<div style="background:white;color:${TEAL_DEEP};font-size:9px;font-weight:800;
+              padding:2px 8px;border-radius:6px;border:1.5px solid ${TEAL_DARK};white-space:nowrap;">${myMkt}</div>` : ''}
             <div style="width:52px;height:52px;border-radius:50%;background:white;
               border:3px solid ${TEAL_DARK};display:flex;align-items:center;
-              justify-content:center;box-shadow:0 4px 20px rgba(13,143,143,0.5);">
-              ${svgPin(TEAL_DARK)}
-            </div>
+              justify-content:center;font-size:24px;
+              box-shadow:0 4px 20px rgba(13,143,143,0.5);">${myEmoji || svgPin(TEAL_DARK)}</div>
             <div style="background:${TEAL_DARK};color:white;font-size:10px;font-weight:800;
-              padding:3px 10px;border-radius:8px;white-space:nowrap;margin-top:4px;">You</div>
+              padding:3px 10px;border-radius:8px;white-space:nowrap;">${myName}</div>
           </div>`;
         new mapboxgl.Marker({ element: myEl, anchor:'bottom' })
           .setLngLat([location.lng, location.lat])
@@ -222,7 +228,9 @@ function WebMap({ location, mapUsers, radius, onUserTap }: {
       const color = u.is_pooling ? '#2F855A' : TEAL_DARK;
       const el    = document.createElement('div');
       el.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;">
+        <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;gap:2px;">
+          ${u.market_name ? `<div style="background:white;color:${TEAL_DEEP};font-size:9px;font-weight:800;
+            padding:2px 8px;border-radius:6px;border:1.5px solid ${color};white-space:nowrap;">${u.market_name}</div>` : ''}
           <div style="position:relative;">
             ${u.is_pooling ? `<div style="position:absolute;top:-8px;right:-8px;z-index:2;
               background:#276749;color:white;font-size:8px;font-weight:800;
@@ -233,7 +241,7 @@ function WebMap({ location, mapUsers, radius, onUserTap }: {
               box-shadow:0 4px 20px rgba(0,0,0,0.25);">${emoji}</div>
           </div>
           <div style="background:${color};color:white;font-size:10px;font-weight:800;
-            padding:3px 10px;border-radius:8px;white-space:nowrap;margin-top:4px;">${name}</div>
+            padding:3px 10px;border-radius:8px;white-space:nowrap;">${name}</div>
         </div>`;
       el.addEventListener('click', () => onTap(u));
       const marker = new mapboxgl.Marker({ element: el, anchor:'bottom' })
@@ -828,6 +836,8 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
           mapUsers={mapUsers}
           radius={radius}
           onUserTap={(user) => { setSelectedUser(user); setShowUserModal(true); }}
+          myProfile={myProfile}
+          selectedMarket={selectedMarket}
         />
 
         <View style={st.userCountBadge}>
