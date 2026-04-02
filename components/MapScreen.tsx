@@ -152,7 +152,12 @@ function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMark
         document.head.appendChild(link);
       }
 
-      if (!mapContainerRef.current || mapRef.current) return;
+      if (!mapContainerRef.current) return;
+      // If a stale map ref exists (e.g. after HMR), clear it before reinitializing
+      if (mapRef.current) {
+        try { mapRef.current.remove(); } catch (e) {}
+        mapRef.current = null;
+      }
 
       const map = new mapboxgl.Map({
         container: mapContainerRef.current,
@@ -199,7 +204,7 @@ function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMark
     }
     };
     initMap();
-    return () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };
+    return () => { try { mapRef.current?.remove(); } catch (e) {} mapRef.current = null; };
   }, [location]);
 
   useEffect(() => {
