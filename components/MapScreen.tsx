@@ -133,9 +133,10 @@ function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMark
   myProfile: any;
   selectedMarket: any;
 }) {
-  const mapContainerRef = useRef<any>(null);
-  const mapRef          = useRef<any>(null);
-  const markersRef      = useRef<any[]>([]);
+  const mapContainerRef  = useRef<any>(null);
+  const mapRef           = useRef<any>(null);
+  const markersRef       = useRef<any[]>([]);
+  const myMarkerElRef    = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
@@ -175,6 +176,7 @@ function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMark
         map.addLayer({ id:'radius-border', type:'line', source:'radius', paint:{ 'line-color':TEAL, 'line-width':1.5, 'line-dasharray':[3,3] } });
 
         const myEl = document.createElement('div');
+        myMarkerElRef.current = myEl;
         const myEmoji = myProfile?.avatar_emoji || '';
         const myName  = myProfile?.first_name   || 'You';
         const myMkt   = selectedMarket?.name     || '';
@@ -206,6 +208,25 @@ function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMark
     initMap();
     return () => { try { mapRef.current?.remove(); } catch (e) {} mapRef.current = null; };
   }, [location]);
+
+  // Update "my marker" whenever profile or selected market changes
+  useEffect(() => {
+    if (!myMarkerElRef.current) return;
+    const myEmoji = myProfile?.avatar_emoji || '';
+    const myName  = myProfile?.first_name   || 'You';
+    const myMkt   = selectedMarket?.name    || '';
+    myMarkerElRef.current.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+        ${myMkt ? `<div style="background:white;color:${TEAL_DEEP};font-size:9px;font-weight:800;
+          padding:2px 8px;border-radius:6px;border:1.5px solid ${TEAL_DARK};white-space:nowrap;">${myMkt}</div>` : ''}
+        <div style="width:52px;height:52px;border-radius:50%;background:white;
+          border:3px solid ${TEAL_DARK};display:flex;align-items:center;
+          justify-content:center;font-size:24px;
+          box-shadow:0 4px 20px rgba(13,143,143,0.5);">${myEmoji || svgPin(TEAL_DARK)}</div>
+        <div style="background:${TEAL_DARK};color:white;font-size:10px;font-weight:800;
+          padding:3px 10px;border-radius:8px;white-space:nowrap;">${myName}</div>
+      </div>`;
+  }, [myProfile, selectedMarket]);
 
   useEffect(() => {
     if (!mapRef.current || Platform.OS !== 'web') return;
