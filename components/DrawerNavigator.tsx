@@ -259,7 +259,22 @@ function HomeScreen({ profile, email, onNavigate }: {
     { icon: Icons.map(TEAL_DARK, 24),  txt:'The closer your group, the faster and cheaper your combined delivery.' },
   ];
 
-  const markets = ['Jumia','Konga','Amazon','Jiji','Temu','Aliexpress','Shoprite','Slot'];
+  const markets = ['Jumia','Konga','Amazon','Jiji','Temu','Aliexpress','Slot','& many more...'];
+  const marqueeX = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const pillW = 120;
+    const totalW = markets.length * pillW;
+    marqueeX.setValue(0);
+    const anim = Animated.loop(
+      Animated.timing(marqueeX, {
+        toValue: -totalW,
+        duration: markets.length * 2000,
+        useNativeDriver: false,
+      })
+    );
+    anim.start();
+    return () => anim.stop();
+  }, []);
 
   return (
     <ScrollView style={{flex:1}} contentContainerStyle={s.homeScroll} showsVerticalScrollIndicator={false}>
@@ -347,16 +362,17 @@ function HomeScreen({ profile, email, onNavigate }: {
       </ScrollView>
 
       <Text style={s.sectionHead}>Supported Markets</Text>
-      <View style={s.marketsCard}>
-        {markets.map((m, i) => (
-          <View key={i} style={s.marketPill}>
-            <View style={s.marketPillIcon}>{Icons.market(TEAL_DEEP, 11)}</View>
-            <Text style={s.marketPillTxt}>{m}</Text>
-          </View>
-        ))}
-        <View style={[s.marketPill, s.marketPillMore]}>
-          <Text style={s.marketPillMoreTxt}>& many more...</Text>
-        </View>
+      <View style={s.marketsMarqueeWrap}>
+        <Animated.View style={[s.marketsMarqueeRow, { transform: [{ translateX: marqueeX }] }]}>
+          {[...markets, ...markets].map((m, i) => (
+            m === '& many more...'
+              ? <View key={i} style={[s.marketPill, s.marketPillMore]}><Text style={s.marketPillMoreTxt}>{m}</Text></View>
+              : <View key={i} style={s.marketPill}>
+                  <View style={s.marketPillIcon}>{Icons.market(TEAL_DEEP, 11)}</View>
+                  <Text style={s.marketPillTxt}>{m}</Text>
+                </View>
+          ))}
+        </Animated.View>
       </View>
 
       <Text style={s.sectionHead}>Account Status</Text>
@@ -789,7 +805,8 @@ const s = StyleSheet.create({
   tipIconWrap:  { width:40,height:40,borderRadius:10,backgroundColor:TEAL+'10',alignItems:'center',justifyContent:'center',marginBottom:10 },
   tipTxt:       { fontSize:12,color:MID,lineHeight:18 },
 
-  marketsCard:      { flexDirection:'row',flexWrap:'wrap',gap:8,marginHorizontal:16,marginBottom:16,backgroundColor:WHITE,borderRadius:14,padding:16,borderWidth:1,borderColor:LIGHT_BORDER },
+  marketsMarqueeWrap: { marginHorizontal:16,marginBottom:16,backgroundColor:WHITE,borderRadius:14,paddingVertical:14,borderWidth:1,borderColor:LIGHT_BORDER,overflow:'hidden' },
+  marketsMarqueeRow:  { flexDirection:'row',alignItems:'center',gap:8,paddingHorizontal:8 },
   marketPill:       { flexDirection:'row',alignItems:'center',gap:5,paddingHorizontal:12,paddingVertical:7,borderRadius:20,backgroundColor:TEAL+'12',borderWidth:1,borderColor:TEAL+'30' },
   marketPillIcon:   { width:16,height:16,alignItems:'center',justifyContent:'center' },
   marketPillTxt:    { fontSize:12,fontWeight:'600',color:TEAL_DEEP },
