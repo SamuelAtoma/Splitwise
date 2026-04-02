@@ -28,13 +28,17 @@ function Svg({ size=24, stroke=DARK, fill='none', children }: any) {
 }
 
 const Icons = {
-  chat:  (s:string,sz=20) => <Svg size={sz} stroke={s}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></Svg>,
-  send:  (s:string,sz=18) => <Svg size={sz} stroke={s} fill={s}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></Svg>,
-  back:  (s:string,sz=20) => <Svg size={sz} stroke={s}><polyline points="15 18 9 12 15 6"/></Svg>,
-  users: (s:string,sz=20) => <Svg size={sz} stroke={s}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></Svg>,
-  cart:  (s:string,sz=20) => <Svg size={sz} stroke={s}><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></Svg>,
-  globe: (s:string,sz=20) => <Svg size={sz} stroke={s}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></Svg>,
-  lock:  (s:string,sz=20) => <Svg size={sz} stroke={s}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></Svg>,
+  chat:   (s:string,sz=20) => <Svg size={sz} stroke={s}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></Svg>,
+  send:   (s:string,sz=18) => <Svg size={sz} stroke={s} fill={s}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></Svg>,
+  back:   (s:string,sz=20) => <Svg size={sz} stroke={s}><polyline points="15 18 9 12 15 6"/></Svg>,
+  users:  (s:string,sz=20) => <Svg size={sz} stroke={s}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></Svg>,
+  cart:   (s:string,sz=20) => <Svg size={sz} stroke={s}><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></Svg>,
+  globe:  (s:string,sz=20) => <Svg size={sz} stroke={s}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></Svg>,
+  lock:   (s:string,sz=20) => <Svg size={sz} stroke={s}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></Svg>,
+  attach: (s:string,sz=20) => <Svg size={sz} stroke={s}><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></Svg>,
+  image:  (s:string,sz=20) => <Svg size={sz} stroke={s}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></Svg>,
+  file:   (s:string,sz=20) => <Svg size={sz} stroke={s}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></Svg>,
+  video:  (s:string,sz=20) => <Svg size={sz} stroke={s}><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></Svg>,
 };
 
 interface Message {
@@ -45,6 +49,10 @@ interface Message {
   content: string;
   is_bot: boolean;
   created_at: string;
+  file_url?: string;
+  file_name?: string;
+  file_type?: string;
+  file_size?: number;
   sender_profile?: { avatar_emoji: string; display_name: string; first_name: string; };
 }
 
@@ -106,7 +114,35 @@ function MessageBubble({ msg, isMe, showAvatar }: {
             {msg.sender_profile?.display_name || msg.sender_profile?.first_name || msg.sender_name}
           </Text>
         )}
-        <Text style={[s.bubbleTxt, isMe && s.bubbleTxtMe]}>{msg.content}</Text>
+        {/* Media content */}
+        {msg.file_url && msg.file_type?.startsWith('image/') && Platform.OS === 'web' && (
+          <img
+            src={msg.file_url}
+            alt={msg.file_name}
+            style={{ maxWidth: 220, maxHeight: 200, borderRadius: 8, display: 'block', marginBottom: 4 } as any}
+            onClick={() => window.open(msg.file_url, '_blank')}
+          />
+        )}
+        {msg.file_url && msg.file_type?.startsWith('video/') && Platform.OS === 'web' && (
+          <video
+            src={msg.file_url}
+            controls
+            style={{ maxWidth: 220, borderRadius: 8, display: 'block', marginBottom: 4 } as any}
+          />
+        )}
+        {msg.file_url && !msg.file_type?.startsWith('image/') && !msg.file_type?.startsWith('video/') && (
+          <TouchableOpacity
+            style={s.fileAttach}
+            onPress={() => { if (Platform.OS === 'web') window.open(msg.file_url, '_blank'); }}
+          >
+            <View style={s.fileAttachIcon}>{Icons.file(TEAL_DARK, 18)}</View>
+            <View style={{flex:1}}>
+              <Text style={s.fileAttachName} numberOfLines={1}>{msg.file_name || 'File'}</Text>
+              {msg.file_size ? <Text style={s.fileAttachSize}>{(msg.file_size/1024).toFixed(1)} KB</Text> : null}
+            </View>
+          </TouchableOpacity>
+        )}
+        {msg.content ? <Text style={[s.bubbleTxt, isMe && s.bubbleTxtMe]}>{msg.content}</Text> : null}
         <Text style={[s.msgTime, isMe && {color:WHITE+'99',textAlign:'right'}]}>{time}</Text>
       </View>
     </View>
@@ -169,8 +205,10 @@ export default function ChatScreen({ groupId: initialGroupId }: Props) {
   const [currentUser,  setCurrentUser]  = useState<any>(null);
   const [profile,      setProfile]      = useState<any>(null);
   const [lastMessages, setLastMessages] = useState<Record<string,Message>>({});
-  const scrollRef = useRef<ScrollView>(null);
-  const subRef    = useRef<any>(null);
+  const scrollRef    = useRef<ScrollView>(null);
+  const subRef       = useRef<any>(null);
+  const fileInputRef = useRef<any>(null);
+  const [uploading,  setUploading] = useState(false);
 
   useEffect(() => {
     init();
@@ -288,6 +326,35 @@ export default function ChatScreen({ groupId: initialGroupId }: Props) {
     }
   };
 
+  const uploadAndSend = async (file: File) => {
+    if (!activeGroup || !currentUser) return;
+    setUploading(true);
+    try {
+      const ext  = file.name.split('.').pop() || 'bin';
+      const path = `${currentUser.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('chat-media').upload(path, file, { contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage
+        .from('chat-media').getPublicUrl(path);
+      await supabase.from('messages').insert({
+        group_id:    activeGroup.id,
+        sender_id:   currentUser.id,
+        sender_name: profile?.display_name || profile?.first_name || 'User',
+        content:     '',
+        is_bot:      false,
+        file_url:    publicUrl,
+        file_name:   file.name,
+        file_type:   file.type,
+        file_size:   file.size,
+      });
+    } catch (e) {
+      console.error('Upload failed:', e);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const goBack = () => {
     setActiveGroup(null);
     setMessages([]);
@@ -383,6 +450,31 @@ export default function ChatScreen({ groupId: initialGroupId }: Props) {
 
         {/* Input */}
         <View style={s.inputBar}>
+          {/* Hidden file input (web only) */}
+          {Platform.OS === 'web' && (
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip"
+              style={{ display: 'none' } as any}
+              onChange={(e: any) => {
+                const file = e.target.files?.[0];
+                if (file) uploadAndSend(file);
+                e.target.value = '';
+              }}
+            />
+          )}
+          {/* Attach button */}
+          <TouchableOpacity
+            style={s.attachBtn}
+            onPress={() => { if (Platform.OS === 'web') fileInputRef.current?.click(); }}
+            disabled={uploading}
+          >
+            {uploading
+              ? <ActivityIndicator color={TEAL_DARK} size="small"/>
+              : Icons.attach(TEAL_DARK, 20)
+            }
+          </TouchableOpacity>
           <TextInput
             style={s.msgInput}
             placeholder="Type a message..."
@@ -542,7 +634,12 @@ const s = StyleSheet.create({
   msgTime:      { fontSize:10,color:MID,marginTop:4 },
 
   // Input
-  inputBar:  { flexDirection:'row',alignItems:'flex-end',gap:10,padding:12,paddingBottom:Platform.OS==='ios'?28:12,backgroundColor:WHITE,borderTopWidth:1,borderTopColor:LIGHT_BORDER },
-  msgInput:  { flex:1,backgroundColor:BG,borderRadius:22,paddingHorizontal:16,paddingVertical:10,fontSize:14,color:DARK,borderWidth:1,borderColor:LIGHT_BORDER,maxHeight:100 },
-  sendBtn:   { width:44,height:44,borderRadius:22,backgroundColor:TEAL_DARK,alignItems:'center',justifyContent:'center',shadowColor:TEAL_DARK,shadowOffset:{width:0,height:3},shadowOpacity:0.3,shadowRadius:6,elevation:4 },
+  inputBar:      { flexDirection:'row',alignItems:'flex-end',gap:8,padding:12,paddingBottom:Platform.OS==='ios'?28:12,backgroundColor:WHITE,borderTopWidth:1,borderTopColor:LIGHT_BORDER },
+  attachBtn:     { width:40,height:40,borderRadius:20,backgroundColor:TEAL+'15',alignItems:'center',justifyContent:'center',borderWidth:1,borderColor:TEAL+'30' },
+  msgInput:      { flex:1,backgroundColor:BG,borderRadius:22,paddingHorizontal:16,paddingVertical:10,fontSize:14,color:DARK,borderWidth:1,borderColor:LIGHT_BORDER,maxHeight:100 },
+  sendBtn:       { width:44,height:44,borderRadius:22,backgroundColor:TEAL_DARK,alignItems:'center',justifyContent:'center',shadowColor:TEAL_DARK,shadowOffset:{width:0,height:3},shadowOpacity:0.3,shadowRadius:6,elevation:4 },
+  fileAttach:    { flexDirection:'row',alignItems:'center',gap:10,backgroundColor:TEAL+'10',borderRadius:10,padding:10,marginBottom:4,borderWidth:1,borderColor:TEAL+'25' },
+  fileAttachIcon:{ width:36,height:36,borderRadius:8,backgroundColor:TEAL+'20',alignItems:'center',justifyContent:'center' },
+  fileAttachName:{ fontSize:13,fontWeight:'700',color:DARK,flex:1 },
+  fileAttachSize:{ fontSize:11,color:MID,marginTop:2 },
 });
