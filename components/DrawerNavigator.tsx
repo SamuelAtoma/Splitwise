@@ -628,7 +628,11 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
     ]).start(() => setDrawerOpen(false));
   };
 
-  const navigate = (screen: ScreenName) => { setActiveScreen(screen); closeDrawer(); };
+  const navigate = (screen: ScreenName) => {
+    if (screen === 'Chat') setActiveChatId(undefined); // always show chat list, not last opened chat
+    setActiveScreen(screen);
+    closeDrawer();
+  };
 
   const toggleBot = () => {
     if (botOpen) {
