@@ -723,12 +723,10 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
 
   const fetchNearbyUsers = async () => {
     if (!location) return;
-    const cutoff = new Date(Date.now() - 3 * 60 * 1000).toISOString(); // 3 min ago
     const { data } = await supabase
       .from('map_sessions')
       .select(`*, profile:profiles(first_name, last_name, avatar_emoji)`)
-      .neq('user_id', currentUser?.id || '')
-      .gt('last_seen', cutoff);
+      .neq('user_id', currentUser?.id || '');
     if (!data) return;
     const nearby = data.filter((u: any) =>
       distanceKm(location.lat, location.lng, u.lat, u.lng) <= radius
