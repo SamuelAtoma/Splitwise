@@ -271,9 +271,6 @@ function HomeScreen({ profile, email, onNavigate }: {
           <Text style={s.heroGreeting}>{greeting},</Text>
           <Text style={s.heroName}>{profile?.display_name || profile?.first_name || 'Shopper'}</Text>
           <Text style={s.heroSub}>Ready to split & save today?</Text>
-          <TouchableOpacity style={s.heroBtn} onPress={() => onNavigate('Map')}>
-            <Text style={s.heroBtnTxt}>Find Nearby Shoppers →</Text>
-          </TouchableOpacity>
         </View>
         <View style={s.heroAvatar}>
           {profile?.avatar_emoji
