@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
+import LandingPage from './components/LandingPage';
 import Onboarding from './components/Onboarding';
 import AuthScreen from './components/AuthScreen';
 import ProfileSetup from './components/ProfileSetup';
@@ -9,7 +10,7 @@ import DrawerNavigator from './components/DrawerNavigator';
 
 const TEAL_DARK = '#0D8F8F';
 
-type Screen = 'loading' | 'onboarding' | 'signup' | 'signin' | 'profile_setup' | 'dashboard';
+type Screen = 'loading' | 'landing' | 'onboarding' | 'signup' | 'signin' | 'profile_setup' | 'dashboard';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('loading');
@@ -19,7 +20,7 @@ export default function App() {
       if (session) {
         checkProfileSetup(session.user.id);
       } else {
-        setScreen('onboarding');
+        setScreen('landing');
       }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -54,6 +55,12 @@ export default function App() {
   return (
     <View style={s.root}>
       <StatusBar style="dark" />
+      {screen === 'landing' && (
+        <LandingPage
+          onGetStarted={() => setScreen('onboarding')}
+          onSignIn={() => setScreen('signin')}
+        />
+      )}
       {screen === 'onboarding' && (
         <Onboarding onFinish={() => setScreen('signup')} />
       )}
@@ -80,7 +87,7 @@ export default function App() {
         />
       )}
       {screen === 'dashboard' && (
-        <DrawerNavigator onSignOut={() => setScreen('onboarding')} />
+        <DrawerNavigator onSignOut={() => setScreen('landing')} />
       )}
     </View>
   );
