@@ -13,7 +13,7 @@ const MID       = '#3A7070';
 const BG        = '#F8FEFE';
 const BORDER    = '#C8E8E8';
 
-interface Props { onGetStarted: () => void; onSignIn: () => void; }
+interface Props { onGetStarted: () => void; onSignIn: () => void; onPrivacy?: () => void; onTerms?: () => void; }
 
 // Exact data from index.html
 const MARKETS_DATA: Record<string, { emoji: string; name: string; color: string }> = {
@@ -150,7 +150,7 @@ function LeafletMap({ liveCount }: { liveCount: number }) {
   );
 }
 
-export default function LandingPage({ onGetStarted, onSignIn }: Props) {
+export default function LandingPage({ onGetStarted, onSignIn, onPrivacy, onTerms }: Props) {
   const [liveCount,  setLiveCount]  = useState(0);
   const [shoppers,   setShoppers]   = useState(5243);
   const [saved,      setSaved]      = useState(127300000);
@@ -378,12 +378,17 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
         <View style={s.footer}>
           <Text style={s.footerTxt}>© 2026 SPLITWI$E. Shop Together, Save Together.</Text>
           <View style={s.footerLinks}>
-            {['Privacy Policy','Terms of Service','Contact us'].map((l, i) => (
-              <React.Fragment key={l}>
-                {i > 0 && <Text style={s.footerDot}>•</Text>}
-                <TouchableOpacity><Text style={s.footerLink}>{l}</Text></TouchableOpacity>
-              </React.Fragment>
-            ))}
+            <TouchableOpacity onPress={onPrivacy}>
+              <Text style={s.footerLink}>Privacy Policy</Text>
+            </TouchableOpacity>
+            <Text style={s.footerDot}>•</Text>
+            <TouchableOpacity onPress={onTerms}>
+              <Text style={s.footerLink}>Terms of Service</Text>
+            </TouchableOpacity>
+            <Text style={s.footerDot}>•</Text>
+            <TouchableOpacity>
+              <Text style={s.footerLink}>Contact Us</Text>
+            </TouchableOpacity>
             <Text style={s.footerDot}>•</Text>
             <TouchableOpacity onPress={onSignIn}><Text style={s.footerLink}>Sign In</Text></TouchableOpacity>
           </View>

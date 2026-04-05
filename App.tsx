@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Text, Platform } from 'react-native';
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import LandingPage from './components/LandingPage';
@@ -7,20 +7,44 @@ import Onboarding from './components/Onboarding';
 import AuthScreen from './components/AuthScreen';
 import ProfileSetup from './components/ProfileSetup';
 import DrawerNavigator from './components/DrawerNavigator';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
 
 const TEAL_DARK = '#0D8F8F';
 
-type Screen = 'loading' | 'landing' | 'onboarding' | 'signup' | 'signin' | 'profile_setup' | 'dashboard';
+type Screen = 'loading' | 'landing' | 'onboarding' | 'signup' | 'signin' | 'profile_setup' | 'dashboard' | 'privacy' | 'terms';
+
+// Screens that should be pushed into browser history
+const HISTORY_SCREENS: Screen[] = ['landing', 'onboarding', 'signup', 'signin', 'profile_setup', 'dashboard', 'privacy', 'terms'];
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('loading');
+
+  // Navigate and push browser history on web
+  const navigate = (next: Screen) => {
+    setScreen(next);
+    if (Platform.OS === 'web' && HISTORY_SCREENS.includes(next)) {
+      window.history.pushState({ screen: next }, '', `/${next === 'landing' ? '' : next}`);
+    }
+  };
+
+  // Listen to browser back/forward buttons
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const onPop = (e: PopStateEvent) => {
+      const s: Screen = e.state?.screen ?? 'landing';
+      setScreen(s);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         checkProfileSetup(session.user.id);
       } else {
-        setScreen('landing');
+        navigate('landing');
       }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -36,9 +60,9 @@ export default function App() {
       .eq('id', userId)
       .maybeSingle();
     if (data?.display_name) {
-      setScreen('dashboard');
+      navigate('dashboard');
     } else {
-      setScreen('profile_setup');
+      navigate('profile_setup');
     }
   };
 
@@ -57,37 +81,45 @@ export default function App() {
       <StatusBar style="dark" />
       {screen === 'landing' && (
         <LandingPage
-          onGetStarted={() => setScreen('onboarding')}
-          onSignIn={() => setScreen('signin')}
+          onGetStarted={() => navigate('onboarding')}
+          onSignIn={() => navigate('signin')}
+          onPrivacy={() => navigate('privacy')}
+          onTerms={() => navigate('terms')}
         />
       )}
       {screen === 'onboarding' && (
-        <Onboarding onFinish={() => setScreen('signup')} />
+        <Onboarding onFinish={() => navigate('signup')} />
       )}
       {screen === 'signup' && (
         <AuthScreen
           mode="signup"
-          onBack={() => setScreen('onboarding')}
-          onSuccess={() => setScreen('profile_setup')}
-          onSwitchToSignIn={() => setScreen('signin')}
+          onBack={() => navigate('onboarding')}
+          onSuccess={() => navigate('profile_setup')}
+          onSwitchToSignIn={() => navigate('signin')}
         />
       )}
       {screen === 'signin' && (
         <AuthScreen
           mode="signin"
-          onBack={() => setScreen('onboarding')}
-          onSuccess={() => setScreen('dashboard')}
-          onSwitchToSignUp={() => setScreen('signup')}
+          onBack={() => navigate('onboarding')}
+          onSuccess={() => navigate('dashboard')}
+          onSwitchToSignUp={() => navigate('signup')}
         />
       )}
       {screen === 'profile_setup' && (
         <ProfileSetup
-          onComplete={() => setScreen('dashboard')}
-          onBack={() => setScreen('signin')}
+          onComplete={() => navigate('dashboard')}
+          onBack={() => navigate('signin')}
         />
       )}
       {screen === 'dashboard' && (
-        <DrawerNavigator onSignOut={() => setScreen('landing')} />
+        <DrawerNavigator onSignOut={() => navigate('landing')} />
+      )}
+      {screen === 'privacy' && (
+        <PrivacyPolicy onBack={() => navigate('landing')} />
+      )}
+      {screen === 'terms' && (
+        <TermsOfService onBack={() => navigate('landing')} />
       )}
     </View>
   );
