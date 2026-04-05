@@ -14,8 +14,8 @@ const BORDER    = '#C8E8E8';
 interface Props { onBack: () => void; }
 
 const HIGHLIGHTS = [
-  { icon: 'people' as const,        color: '#10B981', bg: '#ECFDF5', text: 'Free for everyone to use' },
-  { icon: 'shield' as const,        color: TEAL_DARK, bg: '#F0FDFA', text: 'No hidden fees or charges' },
+  { icon: 'map' as const,           color: '#10B981', bg: '#ECFDF5', text: 'Browse the map for free' },
+  { icon: 'chatbubbles' as const,   color: TEAL_DARK, bg: '#F0FDFA', text: 'Small fee to unlock chat' },
   { icon: 'hand-left' as const,     color: '#8B5CF6', bg: '#F5F3FF', text: 'You own your content' },
   { icon: 'close-circle' as const,  color: '#EF4444', bg: '#FEF2F2', text: 'Leave anytime, no lock-in' },
 ];
@@ -31,10 +31,22 @@ const SECTIONS: { icon: keyof typeof Ionicons.glyphMap; color: string; bg: strin
     icon: 'cart', color: '#F59E0B', bg: '#FFFBEB',
     title: 'What SPLITWI$E Is',
     friendly: 'A social layer for smarter online shopping.',
-    body: `SPLITWI$E helps you find other shoppers near you who are ordering from the same online market — so you can coordinate, share delivery costs, and shop smarter together.\n\nWe are NOT a marketplace. We don't process payments, ship products, or take orders. Think of us as a neighbourhood board where shoppers connect.`,
+    body: `SPLITWI$E helps you find other shoppers near you who are ordering from the same online market — so you can coordinate, share delivery costs, and shop smarter together.\n\nYou can browse the live map and see nearby shoppers for free. To chat and connect with a specific shopper, a small one-time fee is charged per conversation unlock.\n\nWe are NOT a marketplace. We don't process your product orders or handle deliveries. We are a discovery and communication platform.`,
   },
   {
-    icon: 'person-add', color: '#10B981', bg: '#ECFDF5',
+    icon: 'cash', color: '#10B981', bg: '#ECFDF5',
+    title: 'Paid Chat Feature',
+    friendly: 'Free to browse. A small fee to connect.',
+    body: `Viewing the live map and filtering nearby shoppers is completely free.\n\nTo start a chat conversation with another shopper, a small one-time fee is charged. This fee:\n\n• Unlocks a direct chat thread with that specific shopper.\n• Is charged once per conversation — not recurring.\n• Is non-refundable once a chat session has been opened and a message has been sent.\n\nPayments are processed securely via a certified payment provider (e.g., Paystack or Flutterwave). We do not store your card details. By making a payment, you agree to the payment provider's terms as well.\n\nIf you experience a payment issue without receiving access to the chat, contact billing@splitwise.ng within 48 hours for a review.`,
+  },
+  {
+    icon: 'school', color: '#6366F1', bg: '#EEF2FF',
+    title: 'Communities, Campuses & Hostels',
+    friendly: 'Built for wherever people live and shop together.',
+    body: `SPLITWI$E is designed to thrive in close-knit communities — student hostels, university campuses, residential estates, office clusters, and neighbourhoods across Nigeria.\n\nIf you're using SPLITWI$E as part of a campus community or group, the same individual terms apply to every user. No institution or organisation has administrative access to your account or chats.\n\nSPLITWI$E is open to all — students, workers, families, and anyone else who wants to shop smarter with the people around them.`,
+  },
+  {
+    icon: 'person-add', color: '#F59E0B', bg: '#FFFBEB',
     title: 'Who Can Use SPLITWI$E',
     friendly: 'Anyone 13+ who plays by the rules.',
     body: `You must be at least 13 years old to use SPLITWI$E. By signing up, you confirm that:\n\n• All information you provide is accurate.\n• You won't impersonate anyone else.\n• You have the legal ability to agree to these terms.\n\nWe may ask for age verification at any time.`,
@@ -130,7 +142,7 @@ export default function TermsOfService({ onBack }: Props) {
           </View>
           <Text style={s.heroTitle}>Terms of Service</Text>
           <Text style={s.heroSub}>
-            Written by humans, for humans.{'\n'}We kept the legal stuff but made it readable.
+            Short, honest, and built for real communities.{'\n'}Know exactly what you're agreeing to.
           </Text>
           <View style={s.heroBadge}>
             <Text style={s.heroBadgeTxt}>Nigerian Law · Last updated April 2026</Text>
@@ -174,8 +186,8 @@ export default function TermsOfService({ onBack }: Props) {
         <View style={s.footer}>
           <View style={s.footerCard}>
             <Ionicons name="checkmark-circle" size={28} color={TEAL} />
-            <Text style={s.footerTitle}>Simple deal.</Text>
-            <Text style={s.footerSub}>You use SPLITWI$E to shop smarter. We keep it safe, fast, and honest. That's the whole agreement.</Text>
+            <Text style={s.footerTitle}>Straightforward. Honest. Fair.</Text>
+            <Text style={s.footerSub}>Browse free. Unlock chat when you find your person. Shop smarter with your community — that's what SPLITWI$E is built for.</Text>
             <TouchableOpacity style={s.footerBtn} onPress={onBack}>
               <Text style={s.footerBtnTxt}>← Back to Home</Text>
             </TouchableOpacity>

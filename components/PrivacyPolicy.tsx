@@ -17,7 +17,7 @@ const PROMISES = [
   { icon: 'ban' as const,          color: '#EF4444', bg: '#FEF2F2', text: "We never sell your data" },
   { icon: 'location' as const,     color: '#F59E0B', bg: '#FFFBEB', text: "Location only when you're live" },
   { icon: 'trash' as const,        color: '#8B5CF6', bg: '#F5F3FF', text: "Delete your account anytime" },
-  { icon: 'lock-closed' as const,  color: TEAL_DARK, bg: '#F0FDFA', text: "Encrypted & secure storage" },
+  { icon: 'card' as const,         color: TEAL_DARK, bg: '#F0FDFA', text: "Payment data is never stored by us" },
 ];
 
 const SECTIONS: { icon: keyof typeof Ionicons.glyphMap; color: string; bg: string; title: string; friendly: string; body: string }[] = [
@@ -25,7 +25,7 @@ const SECTIONS: { icon: keyof typeof Ionicons.glyphMap; color: string; bg: strin
     icon: 'person-circle', color: '#3B82F6', bg: '#EFF6FF',
     title: 'What We Collect',
     friendly: 'Only what we need, nothing more.',
-    body: `• Your name, email, and profile details you provide when signing up.\n• Your approximate location — only when you tap "Go Live" on the map.\n• Which markets you shop from and groups you join.\n• Chat messages (stored to deliver them to the right person).\n• Basic device info for bug fixes and support.`,
+    body: `• Your name, email, and profile details you provide when signing up.\n• Your approximate location — only when you tap "Go Live" on the map.\n• Which markets you shop from and groups you join.\n• Chat messages (stored to deliver them to the right person).\n• Payment transaction records (amounts and dates only — we never store your card details).\n• Basic device info for bug fixes and support.`,
   },
   {
     icon: 'sparkles', color: '#F59E0B', bg: '#FFFBEB',
@@ -50,6 +50,18 @@ const SECTIONS: { icon: keyof typeof Ionicons.glyphMap; color: string; bg: strin
     title: 'Your Location',
     friendly: 'You are always in control of your location.',
     body: `We only access your location when you tap "Go Live" on the map screen. The moment you tap "Go Offline," your pin vanishes from everyone's map instantly.\n\nWe never track you in the background. Location data is stored only while your session is active — it is never used for advertising or profiling.`,
+  },
+  {
+    icon: 'card', color: '#10B981', bg: '#ECFDF5',
+    title: 'Payments & Billing',
+    friendly: 'Your card details never touch our servers.',
+    body: `SPLITWI$E charges a small fee to unlock chat with another shopper. Payments are processed through a certified third-party payment provider (e.g., Paystack or Flutterwave).\n\nWe store only:\n• The amount paid\n• The date of the transaction\n• Whether a chat session was unlocked\n\nYour card number, CVV, and bank details are handled entirely by the payment provider — we never see or store them. You can request a history of your transactions at any time by emailing billing@splitwise.ng.`,
+  },
+  {
+    icon: 'school', color: '#6366F1', bg: '#EEF2FF',
+    title: 'Community & Student Users',
+    friendly: 'Built for close-knit communities everywhere.',
+    body: `SPLITWI$E is designed for tight communities — whether that's a student hostel, a university campus, a residential estate, or a block of flats. If you're part of a community account or an institutional group, the same privacy rules apply to you as to every other user.\n\nWe do not share your data with any institution, university, or organisation you may be affiliated with. Your activity on SPLITWI$E is entirely private to you.`,
   },
   {
     icon: 'checkmark-circle', color: '#8B5CF6', bg: '#F5F3FF',

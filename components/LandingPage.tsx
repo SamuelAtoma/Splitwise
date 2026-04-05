@@ -39,9 +39,9 @@ const USERS = [
 const MARKETS = ['Jumia','Konga','Amazon','Jiji','Temu','Aliexpress','Slot','& many more...'];
 
 const STEPS = [
-  { n:'1', title:'Sign Up',        desc:'Create your account with your location. Our map instantly shows nearby shoppers.' },
-  { n:'2', title:'Select Market',  desc:'Choose from preset markets (Jumia, Konga, Amazon, etc) or create your own custom online market. See who else is ordering nearby.' },
-  { n:'3', title:'Connect & Chat', desc:'Join a group, chat with the other shoppers, and coordinate your orders together.' },
+  { n:'1', title:'Sign Up',          desc:'Create your account. Whether you\'re on campus, in a hostel, or anywhere in Nigeria — see who\'s nearby on the live map instantly.' },
+  { n:'2', title:'Find Your Market', desc:'Pick your market (Jumia, Konga, Amazon, etc.) or add a custom one. Filter the map to see only shoppers ordering from the same place as you.' },
+  { n:'3', title:'Unlock & Chat',    desc:'Tap a shopper you want to connect with. Unlock chat with a small one-time fee and start coordinating your orders together.' },
 ];
 
 // SVG icons exactly as in index.html
@@ -59,11 +59,11 @@ const SVG_ICONS = [
 ];
 
 const FEATURES = [
-  { title:'Live Location Map',       desc:'See other shoppers near you in real-time. Find people ordering from the same market and connect instantly.' },
-  { title:'Group Chat',              desc:'Chat directly with people ordering from the same market. Coordinate, ask questions, and connect with ease.' },
-  { title:'Same Market, Same Area',  desc:'Filter by market and location. Only see people who are ordering from the exact same place as you.' },
-  { title:'Any Online Market',       desc:'Choose from popular markets like Jumia, Konga, Temu, and Amazon — or add any custom store you shop from.' },
-  { title:'Real People, Real Orders',desc:'Connect with real shoppers in your neighbourhood. No middlemen, no algorithms — just people near you.' },
+  { title:'Live Location Map',       desc:'See real shoppers near you on a live map — in your estate, on your campus, or anywhere in your city. Updated in real-time.' },
+  { title:'Chat & Coordinate',       desc:'Unlock a chat with any shopper for a small fee and start coordinating orders. Split delivery costs and save every time.' },
+  { title:'Market Filter',           desc:'Filter the map by market. Only see people ordering from Jumia, Konga, Amazon, or whichever store you\'re shopping from.' },
+  { title:'Any Online Market',       desc:'Works with Jumia, Konga, Temu, Amazon, AliExpress and more — or add any custom store, including Instagram vendors and student group buys.' },
+  { title:'Real People, Real Orders',desc:'No bots, no fake listings. Just real people near you — students, residents, workers — all trying to shop smarter together.' },
 ];
 
 // ── Leaflet map — exact replica of index.html (web only) ─────────
@@ -246,9 +246,9 @@ export default function LandingPage({ onGetStarted, onSignIn, onPrivacy, onTerms
           {/* Text */}
           <View style={[s.heroText, wide && { flex: 1 }]}>
             <Text style={s.heroH2}>Shop Together,{'\n'}Save Together</Text>
-            <Text style={s.heroTagline}>Discover shoppers nearby, Order Together</Text>
+            <Text style={s.heroTagline}>Discover shoppers nearby. Order together.</Text>
             <Text style={s.heroDesc}>
-              Discover people near you ordering from the same online market. Connect, chat, and coordinate — it's that simple. Jumia, Konga, Amazon, Temu, and more.
+              Find real people near you ordering from the same online market — in your estate, hostel, or neighbourhood. Filter, connect, and split delivery costs together.
             </Text>
             <View style={[s.ctaRow, !wide && s.ctaRowCol]}>
               <TouchableOpacity style={s.btnPrimary} onPress={onGetStarted} activeOpacity={0.85}>
@@ -360,9 +360,9 @@ export default function LandingPage({ onGetStarted, onSignIn, onPrivacy, onTerms
 
         {/* ══ FINAL CTA ══ */}
         <View style={s.finalCta}>
-          <Text style={s.finalTitle}>Find Your People Today</Text>
+          <Text style={s.finalTitle}>Your Community Is Already Here</Text>
           <Text style={s.finalSub}>
-            Thousands of shoppers near you are already on SPLITWI$E. Sign up for free and start connecting in seconds.
+            Thousands of shoppers — students, residents, and workers — near you are already on SPLITWI$E. See who's ordering nearby and start saving together.
           </Text>
           <View style={[s.ctaRow, !wide && s.ctaRowCol, { justifyContent:'center' }]}>
             <TouchableOpacity style={s.btnPrimary} onPress={onGetStarted} activeOpacity={0.85}>
