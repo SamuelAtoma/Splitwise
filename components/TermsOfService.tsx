@@ -13,93 +13,106 @@ const BORDER    = '#C8E8E8';
 
 interface Props { onBack: () => void; }
 
-const SECTIONS = [
+const HIGHLIGHTS = [
+  { icon: 'people' as const,        color: '#10B981', bg: '#ECFDF5', text: 'Free for everyone to use' },
+  { icon: 'shield' as const,        color: TEAL_DARK, bg: '#F0FDFA', text: 'No hidden fees or charges' },
+  { icon: 'hand-left' as const,     color: '#8B5CF6', bg: '#F5F3FF', text: 'You own your content' },
+  { icon: 'close-circle' as const,  color: '#EF4444', bg: '#FEF2F2', text: 'Leave anytime, no lock-in' },
+];
+
+const SECTIONS: { icon: keyof typeof Ionicons.glyphMap; color: string; bg: string; title: string; friendly: string; body: string }[] = [
   {
-    title: '1. Acceptance of Terms',
-    body: `By creating an account or using SPLITWI$E ("the App"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the App.\n\nThese terms constitute a legally binding agreement between you and SPLITWI$E under Nigerian law. We reserve the right to update these terms at any time with notice to users.`,
+    icon: 'hand-left', color: '#3B82F6', bg: '#EFF6FF',
+    title: 'Accepting These Terms',
+    friendly: 'By using the app, you agree to play fair.',
+    body: `Using SPLITWI$E means you agree to these terms. We've written them as simply as possible so you actually know what you're agreeing to.\n\nIf you don't agree, you can stop using the app at any time — and you're always welcome back when you're ready.`,
   },
   {
-    title: '2. Description of Service',
-    body: `SPLITWI$E is a social shopping coordination platform that allows users to:\n
-• Discover other shoppers in their area ordering from the same online markets (Jumia, Konga, Amazon, Temu, AliExpress, and others).\n
-• Connect and chat with nearby shoppers to coordinate group orders.\n
-• Share delivery costs and shopping tips within groups.\n\nWe do not process payments, fulfill orders, or act as an intermediary between users and any online market. We are a communication and discovery platform only.`,
+    icon: 'cart', color: '#F59E0B', bg: '#FFFBEB',
+    title: 'What SPLITWI$E Is',
+    friendly: 'A social layer for smarter online shopping.',
+    body: `SPLITWI$E helps you find other shoppers near you who are ordering from the same online market — so you can coordinate, share delivery costs, and shop smarter together.\n\nWe are NOT a marketplace. We don't process payments, ship products, or take orders. Think of us as a neighbourhood board where shoppers connect.`,
   },
   {
-    title: '3. Eligibility',
-    body: `You must be at least 13 years of age to use SPLITWI$E. By using the App, you represent and warrant that:\n
-• You are at least 13 years old.\n
-• You have the legal capacity to enter into this agreement.\n
-• You will use the App only for lawful purposes.\n
-• All information you provide is accurate and up to date.`,
+    icon: 'person-add', color: '#10B981', bg: '#ECFDF5',
+    title: 'Who Can Use SPLITWI$E',
+    friendly: 'Anyone 13+ who plays by the rules.',
+    body: `You must be at least 13 years old to use SPLITWI$E. By signing up, you confirm that:\n\n• All information you provide is accurate.\n• You won't impersonate anyone else.\n• You have the legal ability to agree to these terms.\n\nWe may ask for age verification at any time.`,
   },
   {
-    title: '4. User Accounts',
-    body: `You are responsible for maintaining the confidentiality of your account credentials. You agree to:\n
-• Provide accurate information during registration.\n
-• Not share your login credentials with others.\n
-• Notify us immediately of any unauthorised use of your account.\n
-• Not create multiple accounts or impersonate another person.\n\nWe reserve the right to suspend or terminate accounts that violate these terms.`,
+    icon: 'key', color: '#6366F1', bg: '#EEF2FF',
+    title: 'Your Account',
+    friendly: 'Keep your account safe — it\'s yours alone.',
+    body: `You're responsible for keeping your login credentials private. If someone else gets into your account and causes a problem, you may be held responsible.\n\nNotice something suspicious? Email us at support@splitwise.ng immediately and we'll lock it down fast.`,
   },
   {
-    title: '5. User Conduct',
-    body: `By using SPLITWI$E, you agree not to:\n
-• Harass, abuse, threaten, or intimidate other users.\n
-• Post or share illegal, fraudulent, or misleading content.\n
-• Use the App for any commercial solicitation without our consent.\n
-• Attempt to access other users' accounts or data.\n
-• Use automated tools (bots, scrapers) to access the App.\n
-• Violate any applicable Nigerian law, including the Cybercrimes (Prohibition, Prevention, Etc.) Act 2015.\n
-• Engage in any activity that disrupts the App's operation.\n\nViolation of these rules may result in immediate account termination.`,
+    icon: 'heart', color: '#EC4899', bg: '#FDF2F8',
+    title: 'How to Behave',
+    friendly: 'Treat everyone the way you\'d like to be treated.',
+    body: `SPLITWI$E is built on community trust. Here's what we ask:\n\n✅ Be respectful to all users.\n✅ Only share accurate information about your orders.\n✅ Use your real identity.\n\n❌ No harassment, threats, or hate speech.\n❌ No scams, fake deals, or misleading posts.\n❌ No bots or automated scraping.\n\nViolations may result in immediate removal — no refunds, no warnings for serious offences.`,
   },
   {
-    title: '6. Location and Map Features',
-    body: `When you use the live map feature, your approximate location is shared with other users of the App. By enabling the map, you consent to:\n
-• Your location being visible to other SPLITWI$E users in your area.\n
-• Your display name, avatar, and selected market being shown on the map.\n\nYou can go offline at any time. Location sharing is always opt-in and requires your explicit action.`,
+    icon: 'map', color: '#F97316', bg: '#FFF7ED',
+    title: 'The Live Map',
+    friendly: 'Your location, your choice — always.',
+    body: `When you go live on the map, nearby users can see your display name, avatar, and selected market. That's all.\n\nYou can go offline at any time by tapping "Go Offline." Your pin disappears from everyone's map instantly. We never share your precise home address.`,
   },
   {
-    title: '7. Chat and Communications',
-    body: `Messages sent through SPLITWI$E are stored on our servers to deliver them to recipients. You are solely responsible for the content of your messages. We reserve the right to review messages reported for violations and take appropriate action.\n\nDo not share sensitive personal information (bank details, passwords, national ID numbers) through the chat feature.`,
+    icon: 'chatbubbles', color: '#3B82F6', bg: '#EFF6FF',
+    title: 'Chat & Messages',
+    friendly: 'Be kind. Messages are stored.',
+    body: `Messages you send in SPLITWI$E are stored on our servers to deliver them to the right people. Please don't share:\n\n• Bank account details or PINs\n• Passwords or verification codes\n• Your home address or ID numbers\n\nWe may review messages that are reported for abuse, but we don't read your private chats.`,
   },
   {
-    title: '8. Intellectual Property',
-    body: `All content, design, logos, and software within SPLITWI$E are owned by or licensed to SPLITWI$E. You may not copy, reproduce, distribute, or create derivative works without our express written permission.\n\nContent you create (profile information, messages) remains yours. By posting it, you grant SPLITWI$E a non-exclusive licence to display and transmit that content as necessary to operate the service.`,
+    icon: 'ribbon', color: '#8B5CF6', bg: '#F5F3FF',
+    title: 'Intellectual Property',
+    friendly: 'The app is ours. Your content is yours.',
+    body: `Everything in the SPLITWI$E app — design, code, logos — belongs to us and is protected by Nigerian copyright law.\n\nYour profile, messages, and content? That's all yours. By posting it, you give us permission to display it within the app — nothing more.`,
   },
   {
-    title: '9. Disclaimer of Warranties',
-    body: `SPLITWI$E is provided "as is" without warranties of any kind. We do not guarantee:\n
-• That the App will be uninterrupted or error-free.\n
-• The accuracy of information posted by other users.\n
-• The outcome of any group shopping arrangement made through the App.\n\nWe are not responsible for any disputes between users regarding orders, payments, or deliveries. Such arrangements are made entirely between users.`,
+    icon: 'alert-circle', color: '#EF4444', bg: '#FEF2F2',
+    title: 'Our Honest Disclaimer',
+    friendly: 'We do our best, but can\'t promise perfection.',
+    body: `SPLITWI$E is provided "as is." We work hard to keep things running smoothly, but we can't guarantee the app will always be 100% available or error-free.\n\nWe're also not responsible for what other users do. If a group shopping arrangement goes wrong between users, that's between the people involved — we're the connecting platform, not the guarantor.`,
   },
   {
-    title: '10. Limitation of Liability',
-    body: `To the maximum extent permitted by Nigerian law, SPLITWI$E shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the App, including but not limited to loss of data, loss of profits, or financial loss resulting from group shopping arrangements.\n\nOur total liability to you shall not exceed the amount you paid us (if any) in the 12 months prior to the claim.`,
+    icon: 'scale', color: '#6366F1', bg: '#EEF2FF',
+    title: 'Liability',
+    friendly: "We're fair about this.",
+    body: `We won't be liable for indirect losses — like a missed order or a bad shopping deal made between users.\n\nIf we ever cause you direct harm through our own negligence, our maximum liability is capped at what you've paid us in the past 12 months (if anything — since the app is free, that's likely ₦0, but the principle stands).`,
   },
   {
-    title: '11. Consumer Protection',
-    body: `We are committed to complying with the Federal Competition and Consumer Protection Act (FCCPA) administered by the Federal Competition and Consumer Protection Commission (FCCPC). If you have a consumer complaint, you may contact:\n\nFCCPC: fccpc.gov.ng\nOur support: support@splitwise.ng`,
+    icon: 'storefront', color: '#10B981', bg: '#ECFDF5',
+    title: 'Consumer Protection',
+    friendly: 'Your rights as a Nigerian consumer are protected.',
+    body: `We comply with the Federal Competition and Consumer Protection Act (FCCPA). If you feel your consumer rights have been violated:\n\n📧  support@splitwise.ng\n🏛️  FCCPC: fccpc.gov.ng\n\nWe take every complaint seriously and respond within 5 business days.`,
   },
   {
-    title: '12. Governing Law',
-    body: `These Terms of Service are governed by and construed in accordance with the laws of the Federal Republic of Nigeria. Any disputes arising from these terms shall be subject to the exclusive jurisdiction of the Nigerian courts.`,
+    icon: 'business', color: TEAL_DARK, bg: '#F0FDFA',
+    title: 'Nigerian Law Applies',
+    friendly: 'We follow Nigerian law, full stop.',
+    body: `These Terms are governed by the laws of the Federal Republic of Nigeria. Any disputes go to Nigerian courts.\n\nWe're a Nigerian product, built for Nigerians — so this makes total sense.`,
   },
   {
-    title: '13. Termination',
-    body: `You may delete your account at any time from the app settings. We may suspend or terminate your account at any time for violation of these terms, with or without notice.\n\nUpon termination, your right to use the App ceases immediately. We may retain certain data as required by law.`,
+    icon: 'log-out', color: '#F97316', bg: '#FFF7ED',
+    title: 'Leaving SPLITWI$E',
+    friendly: 'No strings attached. Leave whenever you want.',
+    body: `You can delete your account at any time from the app settings. Your data will be erased within 30 days, except where we're legally required to keep it.\n\nWe can also suspend accounts that seriously violate these terms. We'll always try to warn you first for minor issues.`,
   },
   {
-    title: '14. Contact',
-    body: `For questions about these Terms of Service:\n\nEmail: legal@splitwise.ng\nAddress: Lagos, Nigeria\n\nThese terms were last updated: April 2026.`,
+    icon: 'call', color: '#EC4899', bg: '#FDF2F8',
+    title: 'Say Hello',
+    friendly: 'We\'re a real team. We reply.',
+    body: `Questions about these terms? We're happy to explain anything.\n\n📧  legal@splitwise.ng\n📍  Lagos, Nigeria\n\nThese terms were last updated: April 2026.`,
   },
 ];
 
 export default function TermsOfService({ onBack }: Props) {
+  const wide = Platform.OS === 'web';
   return (
     <View style={s.root}>
-      {/* Header */}
-      <View style={[s.header, Platform.OS === 'web' && ({ position: 'sticky', top: 0, zIndex: 100 } as any)]}>
+      {/* Sticky Header */}
+      <View style={[s.header, wide && ({ position: 'sticky', top: 0, zIndex: 100 } as any)]}>
         <TouchableOpacity style={s.backBtn} onPress={onBack}>
           <Ionicons name="arrow-back" size={20} color={TEAL} />
           <Text style={s.backTxt}>Back</Text>
@@ -109,61 +122,113 @@ export default function TermsOfService({ onBack }: Props) {
       </View>
 
       <ScrollView style={s.scroll} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+
         {/* Hero */}
         <View style={s.hero}>
-          <View style={s.iconWrap}>
-            <Ionicons name="document-text" size={36} color={WHITE} />
+          <View style={s.heroIcon}>
+            <Ionicons name="document-text" size={40} color={WHITE} />
           </View>
           <Text style={s.heroTitle}>Terms of Service</Text>
           <Text style={s.heroSub}>
-            Please read these terms carefully before using SPLITWI$E. By using our platform, you agree to be bound by these terms.
+            Written by humans, for humans.{'\n'}We kept the legal stuff but made it readable.
           </Text>
-          <Text style={s.heroDate}>Effective Date: April 1, 2026</Text>
+          <View style={s.heroBadge}>
+            <Text style={s.heroBadgeTxt}>Nigerian Law · Last updated April 2026</Text>
+          </View>
+        </View>
+
+        {/* Highlights */}
+        <View style={s.highlightsWrap}>
+          <Text style={s.highlightsLabel}>WHAT YOU SHOULD KNOW</Text>
+          <View style={s.highlightsGrid}>
+            {HIGHLIGHTS.map((h, i) => (
+              <View key={i} style={[s.highlightCard, { backgroundColor: h.bg, borderColor: h.color + '30' }]}>
+                <View style={[s.highlightIcon, { backgroundColor: h.color + '20' }]}>
+                  <Ionicons name={h.icon} size={18} color={h.color} />
+                </View>
+                <Text style={[s.highlightTxt, { color: h.color }]}>{h.text}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
         {/* Sections */}
         <View style={s.body}>
           {SECTIONS.map((sec, i) => (
-            <View key={i} style={s.section}>
-              <Text style={s.secTitle}>{sec.title}</Text>
-              <Text style={s.secBody}>{sec.body}</Text>
+            <View key={i} style={s.card}>
+              <View style={s.cardHeader}>
+                <View style={[s.cardIcon, { backgroundColor: sec.bg }]}>
+                  <Ionicons name={sec.icon} size={22} color={sec.color} />
+                </View>
+                <View style={s.cardTitles}>
+                  <Text style={s.cardTitle}>{sec.title}</Text>
+                  <Text style={[s.cardFriendly, { color: sec.color }]}>{sec.friendly}</Text>
+                </View>
+              </View>
+              <Text style={s.cardBody}>{sec.body}</Text>
             </View>
           ))}
         </View>
 
         {/* Footer */}
         <View style={s.footer}>
-          <Text style={s.footerTxt}>© 2026 SPLITWI$E · All rights reserved.</Text>
-          <TouchableOpacity onPress={onBack}>
-            <Text style={s.footerLink}>← Back to Home</Text>
-          </TouchableOpacity>
+          <View style={s.footerCard}>
+            <Ionicons name="checkmark-circle" size={28} color={TEAL} />
+            <Text style={s.footerTitle}>Simple deal.</Text>
+            <Text style={s.footerSub}>You use SPLITWI$E to shop smarter. We keep it safe, fast, and honest. That's the whole agreement.</Text>
+            <TouchableOpacity style={s.footerBtn} onPress={onBack}>
+              <Text style={s.footerBtnTxt}>← Back to Home</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={s.footerCopy}>© 2026 SPLITWI$E · All rights reserved.</Text>
         </View>
+
       </ScrollView>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  root:       { flex: 1, backgroundColor: BG },
-  header:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: BORDER },
-  backBtn:    { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  backTxt:    { fontSize: 14, fontWeight: '600', color: TEAL },
-  headerTitle:{ fontSize: 16, fontWeight: '700', color: DARK },
-  scroll:     { flex: 1 },
-  content:    { paddingBottom: 48 },
+  root:        { flex: 1, backgroundColor: BG },
+  header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: WHITE, borderBottomWidth: 1, borderBottomColor: BORDER },
+  backBtn:     { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  backTxt:     { fontSize: 14, fontWeight: '600', color: TEAL },
+  headerTitle: { fontSize: 16, fontWeight: '700', color: DARK },
+  scroll:      { flex: 1 },
+  content:     { paddingBottom: 60 },
 
-  hero:       { backgroundColor: TEAL_DEEP, paddingVertical: 48, paddingHorizontal: 24, alignItems: 'center', gap: 12 },
-  iconWrap:   { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  heroTitle:  { fontSize: 28, fontWeight: '800', color: WHITE, textAlign: 'center' },
-  heroSub:    { fontSize: 14, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 22, maxWidth: 480 },
-  heroDate:   { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4 },
+  // Hero
+  hero:        { backgroundColor: TEAL_DEEP, paddingVertical: 56, paddingHorizontal: 24, alignItems: 'center', gap: 14 },
+  heroIcon:    { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  heroTitle:   { fontSize: 30, fontWeight: '800', color: WHITE, textAlign: 'center' },
+  heroSub:     { fontSize: 15, color: 'rgba(255,255,255,0.8)', textAlign: 'center', lineHeight: 24, maxWidth: 420 },
+  heroBadge:   { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6, marginTop: 4 },
+  heroBadgeTxt:{ fontSize: 12, color: 'rgba(255,255,255,0.9)', fontWeight: '600' },
 
-  body:       { paddingHorizontal: 24, paddingTop: 32, gap: 0, maxWidth: 760, alignSelf: 'center', width: '100%' },
-  section:    { paddingVertical: 24, borderBottomWidth: 1, borderBottomColor: BORDER },
-  secTitle:   { fontSize: 16, fontWeight: '700', color: TEAL_DEEP, marginBottom: 10 },
-  secBody:    { fontSize: 14, color: MID, lineHeight: 23 },
+  // Highlights
+  highlightsWrap:  { paddingHorizontal: 20, paddingTop: 32, paddingBottom: 8, maxWidth: 800, alignSelf: 'center', width: '100%' },
+  highlightsLabel: { fontSize: 11, fontWeight: '800', color: MID, letterSpacing: 2, textAlign: 'center', marginBottom: 16 },
+  highlightsGrid:  { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' },
+  highlightCard:   { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, borderWidth: 1, minWidth: 200, flex: 1 },
+  highlightIcon:   { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  highlightTxt:    { fontSize: 13, fontWeight: '700', flex: 1 },
 
-  footer:     { alignItems: 'center', paddingVertical: 32, gap: 10 },
-  footerTxt:  { fontSize: 12, color: MID },
-  footerLink: { fontSize: 13, color: TEAL, fontWeight: '600' },
+  // Sections
+  body:        { paddingHorizontal: 20, paddingTop: 24, gap: 16, maxWidth: 800, alignSelf: 'center', width: '100%' },
+  card:        { backgroundColor: WHITE, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: BORDER, shadowColor: DARK, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  cardHeader:  { flexDirection: 'row', alignItems: 'flex-start', gap: 14, marginBottom: 14 },
+  cardIcon:    { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  cardTitles:  { flex: 1, gap: 3 },
+  cardTitle:   { fontSize: 16, fontWeight: '700', color: DARK },
+  cardFriendly:{ fontSize: 13, fontWeight: '500' },
+  cardBody:    { fontSize: 14, color: MID, lineHeight: 23 },
+
+  // Footer
+  footer:      { paddingHorizontal: 20, paddingTop: 32, alignItems: 'center', gap: 16, maxWidth: 800, alignSelf: 'center', width: '100%' },
+  footerCard:  { backgroundColor: TEAL + '10', borderRadius: 20, padding: 28, alignItems: 'center', gap: 10, width: '100%', borderWidth: 1, borderColor: TEAL + '30' },
+  footerTitle: { fontSize: 20, fontWeight: '700', color: DARK, textAlign: 'center' },
+  footerSub:   { fontSize: 14, color: MID, textAlign: 'center', lineHeight: 22, maxWidth: 360 },
+  footerBtn:   { backgroundColor: TEAL, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12, marginTop: 6 },
+  footerBtnTxt:{ color: WHITE, fontWeight: '700', fontSize: 14 },
+  footerCopy:  { fontSize: 12, color: MID },
 });

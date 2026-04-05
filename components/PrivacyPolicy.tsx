@@ -13,74 +13,82 @@ const BORDER    = '#C8E8E8';
 
 interface Props { onBack: () => void; }
 
-const SECTIONS = [
+const PROMISES = [
+  { icon: 'ban' as const,          color: '#EF4444', bg: '#FEF2F2', text: "We never sell your data" },
+  { icon: 'location' as const,     color: '#F59E0B', bg: '#FFFBEB', text: "Location only when you're live" },
+  { icon: 'trash' as const,        color: '#8B5CF6', bg: '#F5F3FF', text: "Delete your account anytime" },
+  { icon: 'lock-closed' as const,  color: TEAL_DARK, bg: '#F0FDFA', text: "Encrypted & secure storage" },
+];
+
+const SECTIONS: { icon: keyof typeof Ionicons.glyphMap; color: string; bg: string; title: string; friendly: string; body: string }[] = [
   {
-    title: '1. Information We Collect',
-    body: `When you use SPLITWI$E, we collect the following information:\n
-• Account Information: Your name, email address, and profile details you provide during registration.\n
-• Location Data: Your approximate location (with your permission) to show nearby shoppers on the map. We only collect location when you are actively using the map feature.\n
-• Usage Data: How you interact with the app, including markets you select, groups you join, and features you use.\n
-• Messages: Chat messages sent within the app are stored to deliver them to recipients.\n
-• Device Information: Device type, operating system, and app version for technical support purposes.`,
+    icon: 'person-circle', color: '#3B82F6', bg: '#EFF6FF',
+    title: 'What We Collect',
+    friendly: 'Only what we need, nothing more.',
+    body: `• Your name, email, and profile details you provide when signing up.\n• Your approximate location — only when you tap "Go Live" on the map.\n• Which markets you shop from and groups you join.\n• Chat messages (stored to deliver them to the right person).\n• Basic device info for bug fixes and support.`,
   },
   {
-    title: '2. How We Use Your Information',
-    body: `We use the information we collect to:\n
-• Show you nearby shoppers ordering from the same online market.\n
-• Enable group chat and coordination features.\n
-• Improve and personalise your experience on SPLITWI$E.\n
-• Send important service notifications (not marketing emails without consent).\n
-• Ensure the safety and integrity of our platform.\n
-• Comply with applicable Nigerian laws including the Nigeria Data Protection Regulation (NDPR) and directives from NITDA.`,
+    icon: 'sparkles', color: '#F59E0B', bg: '#FFFBEB',
+    title: 'How We Use It',
+    friendly: 'To make SPLITWI$E work great for you.',
+    body: `• Show you real shoppers nearby ordering from the same market.\n• Power the group chat so you can coordinate orders.\n• Personalise your experience and remember your preferences.\n• Send you important updates about your account (no spam, we promise).\n• Keep the platform safe and free of bad actors.`,
   },
   {
-    title: '3. Sharing of Information',
-    body: `We do not sell your personal information. We may share your information only in these circumstances:\n
-• With Other Users: Your display name, avatar, and selected market are visible to nearby shoppers on the map when you choose to go online.\n
-• With Service Providers: We use Supabase for data storage and authentication. These providers are contractually bound to protect your data.\n
-• Legal Requirements: If required by Nigerian law, court order, or governmental authority under the Cybercrimes (Prohibition, Prevention, Etc.) Act.\n
-• Business Transfer: In the event of a merger or acquisition, your data may be transferred with prior notice to you.`,
+    icon: 'share-social', color: '#10B981', bg: '#ECFDF5',
+    title: 'Who We Share It With',
+    friendly: "We don't sell your data. Ever.",
+    body: `• Other Users: Your name, avatar, and market are visible on the map only when you choose to go live.\n• Supabase: Our secure infrastructure partner — they're contractually bound to protect your data.\n• Nigerian authorities: Only if legally required under the Cybercrimes Act.\n• New owners: If we're ever acquired, you'll be notified before any transfer happens.`,
   },
   {
-    title: '4. Data Storage and Security',
-    body: `Your data is stored securely using Supabase infrastructure with industry-standard encryption in transit (TLS) and at rest. We implement Row Level Security (RLS) to ensure users can only access data they are authorised to view.\n\nWhile we take all reasonable precautions, no internet transmission is 100% secure. We encourage you to use a strong password and not share your login credentials.`,
+    icon: 'lock-closed', color: TEAL_DARK, bg: '#F0FDFA',
+    title: 'How We Keep It Safe',
+    friendly: 'Bank-grade security for your information.',
+    body: `Your data lives on Supabase servers with TLS encryption in transit and AES-256 encryption at rest. We use Row Level Security (RLS) — meaning each user can only ever see their own data, never anyone else's.\n\nWe recommend using a strong password. If you suspect any unauthorised access, contact us immediately.`,
   },
   {
-    title: '5. Location Data',
-    body: `Location data is only used while you are actively using the map feature. We do not track your location in the background. You can go offline at any time by tapping "Go Offline" on the map screen, which immediately removes your pin from other users' maps.\n\nLocation coordinates are stored temporarily in our map_sessions table and are linked to your profile only while you are online.`,
+    icon: 'location', color: '#F97316', bg: '#FFF7ED',
+    title: 'Your Location',
+    friendly: 'You are always in control of your location.',
+    body: `We only access your location when you tap "Go Live" on the map screen. The moment you tap "Go Offline," your pin vanishes from everyone's map instantly.\n\nWe never track you in the background. Location data is stored only while your session is active — it is never used for advertising or profiling.`,
   },
   {
-    title: '6. Your Rights (NDPR)',
-    body: `Under the Nigeria Data Protection Regulation (NDPR), you have the right to:\n
-• Access the personal data we hold about you.\n
-• Request correction of inaccurate data.\n
-• Request deletion of your account and associated data.\n
-• Withdraw consent for data processing at any time.\n
-• Lodge a complaint with the National Information Technology Development Agency (NITDA).\n\nTo exercise any of these rights, contact us at privacy@splitwise.ng`,
+    icon: 'checkmark-circle', color: '#8B5CF6', bg: '#F5F3FF',
+    title: 'Your Rights',
+    friendly: 'You are always in control of your data.',
+    body: `Under the Nigeria Data Protection Regulation (NDPR), you have the right to:\n\n• See all data we hold about you.\n• Correct any inaccurate information.\n• Delete your account and all associated data.\n• Withdraw your consent at any time.\n• File a complaint with NITDA (nitda.gov.ng).\n\nEmail us at privacy@splitwise.ng to exercise any of these rights — we'll respond within 72 hours.`,
   },
   {
-    title: '7. Children\'s Privacy',
-    body: `SPLITWI$E is not intended for users under the age of 13. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information, please contact us immediately and we will delete it.`,
+    icon: 'happy', color: '#EC4899', bg: '#FDF2F8',
+    title: "Children's Privacy",
+    friendly: 'SPLITWI$E is for ages 13 and above.',
+    body: `We do not knowingly collect data from children under 13. If a child has signed up, please email us at privacy@splitwise.ng and we will immediately delete all associated data — no questions asked.`,
   },
   {
-    title: '8. Cookies and Tracking',
-    body: `On the web version, we use essential cookies for session management and authentication. We do not use third-party advertising cookies. You can control cookies through your browser settings, though disabling essential cookies may affect app functionality.`,
+    icon: 'code-slash', color: '#6366F1', bg: '#EEF2FF',
+    title: 'Cookies',
+    friendly: 'Only the essential ones — nothing sneaky.',
+    body: `We use cookies only for keeping you logged in and keeping the app working. We do not use advertising cookies, tracking pixels, or share your browsing behaviour with any third party.\n\nYou can clear cookies in your browser settings at any time.`,
   },
   {
-    title: '9. Changes to This Policy',
-    body: `We may update this Privacy Policy from time to time. We will notify you of significant changes via the app or email. Continued use of SPLITWI$E after changes take effect constitutes acceptance of the updated policy.\n\nThis policy was last updated: April 2026.`,
+    icon: 'notifications', color: '#F59E0B', bg: '#FFFBEB',
+    title: 'Policy Updates',
+    friendly: "We'll always tell you when something changes.",
+    body: `If we update this policy in a meaningful way, we'll notify you in the app and by email — not just quietly update the page. You'll have time to review changes before they take effect.\n\nLast updated: April 2026.`,
   },
   {
-    title: '10. Contact Us',
-    body: `If you have questions about this Privacy Policy or how we handle your data, contact us:\n\nEmail: privacy@splitwise.ng\nAddress: Lagos, Nigeria\n\nFor data protection complaints, you may also contact NITDA at nitda.gov.ng`,
+    icon: 'mail', color: TEAL_DARK, bg: '#F0FDFA',
+    title: 'Get In Touch',
+    friendly: 'Real people. Real responses.',
+    body: `Have a question or concern about your privacy? We'd love to hear from you.\n\n📧  privacy@splitwise.ng\n📍  Lagos, Nigeria\n\nFor formal data protection complaints, you can also reach NITDA at nitda.gov.ng. We always cooperate fully.`,
   },
 ];
 
 export default function PrivacyPolicy({ onBack }: Props) {
+  const wide = Platform.OS === 'web';
   return (
     <View style={s.root}>
-      {/* Header */}
-      <View style={[s.header, Platform.OS === 'web' && ({ position: 'sticky', top: 0, zIndex: 100 } as any)]}>
+      {/* Sticky Header */}
+      <View style={[s.header, wide && ({ position: 'sticky', top: 0, zIndex: 100 } as any)]}>
         <TouchableOpacity style={s.backBtn} onPress={onBack}>
           <Ionicons name="arrow-back" size={20} color={TEAL} />
           <Text style={s.backTxt}>Back</Text>
@@ -90,61 +98,113 @@ export default function PrivacyPolicy({ onBack }: Props) {
       </View>
 
       <ScrollView style={s.scroll} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+
         {/* Hero */}
         <View style={s.hero}>
-          <View style={s.iconWrap}>
-            <Ionicons name="shield-checkmark" size={36} color={WHITE} />
+          <View style={s.heroIcon}>
+            <Ionicons name="shield-checkmark" size={40} color={WHITE} />
           </View>
-          <Text style={s.heroTitle}>Privacy Policy</Text>
+          <Text style={s.heroTitle}>Your Privacy Matters</Text>
           <Text style={s.heroSub}>
-            SPLITWI$E is committed to protecting your privacy and your personal data in accordance with the Nigeria Data Protection Regulation (NDPR).
+            We wrote this in plain English so you actually understand it.{'\n'}No legal jargon, no surprises.
           </Text>
-          <Text style={s.heroDate}>Effective Date: April 1, 2026</Text>
+          <View style={s.heroBadge}>
+            <Text style={s.heroBadgeTxt}>NDPR Compliant · Last updated April 2026</Text>
+          </View>
+        </View>
+
+        {/* TL;DR Promises */}
+        <View style={s.promisesWrap}>
+          <Text style={s.promisesLabel}>THE SHORT VERSION</Text>
+          <View style={s.promisesGrid}>
+            {PROMISES.map((p, i) => (
+              <View key={i} style={[s.promiseCard, { backgroundColor: p.bg, borderColor: p.color + '30' }]}>
+                <View style={[s.promiseIcon, { backgroundColor: p.color + '20' }]}>
+                  <Ionicons name={p.icon} size={18} color={p.color} />
+                </View>
+                <Text style={[s.promiseTxt, { color: p.color }]}>{p.text}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
         {/* Sections */}
         <View style={s.body}>
           {SECTIONS.map((sec, i) => (
-            <View key={i} style={s.section}>
-              <Text style={s.secTitle}>{sec.title}</Text>
-              <Text style={s.secBody}>{sec.body}</Text>
+            <View key={i} style={s.card}>
+              <View style={s.cardHeader}>
+                <View style={[s.cardIcon, { backgroundColor: sec.bg }]}>
+                  <Ionicons name={sec.icon} size={22} color={sec.color} />
+                </View>
+                <View style={s.cardTitles}>
+                  <Text style={s.cardTitle}>{sec.title}</Text>
+                  <Text style={[s.cardFriendly, { color: sec.color }]}>{sec.friendly}</Text>
+                </View>
+              </View>
+              <Text style={s.cardBody}>{sec.body}</Text>
             </View>
           ))}
         </View>
 
-        {/* Footer */}
+        {/* Footer CTA */}
         <View style={s.footer}>
-          <Text style={s.footerTxt}>© 2026 SPLITWI$E · All rights reserved.</Text>
-          <TouchableOpacity onPress={onBack}>
-            <Text style={s.footerLink}>← Back to Home</Text>
-          </TouchableOpacity>
+          <View style={s.footerCard}>
+            <Ionicons name="heart" size={24} color={TEAL} />
+            <Text style={s.footerTitle}>We built this for trust.</Text>
+            <Text style={s.footerSub}>SPLITWI$E only works if you trust us with your data. We take that seriously.</Text>
+            <TouchableOpacity style={s.footerBtn} onPress={onBack}>
+              <Text style={s.footerBtnTxt}>← Back to Home</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={s.footerCopy}>© 2026 SPLITWI$E · All rights reserved.</Text>
         </View>
+
       </ScrollView>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  root:       { flex: 1, backgroundColor: BG },
-  header:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: WHITE, borderBottomWidth: 1, borderBottomColor: BORDER },
-  backBtn:    { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  backTxt:    { fontSize: 14, fontWeight: '600', color: TEAL },
-  headerTitle:{ fontSize: 16, fontWeight: '700', color: DARK },
-  scroll:     { flex: 1 },
-  content:    { paddingBottom: 48 },
+  root:        { flex: 1, backgroundColor: BG },
+  header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: WHITE, borderBottomWidth: 1, borderBottomColor: BORDER },
+  backBtn:     { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  backTxt:     { fontSize: 14, fontWeight: '600', color: TEAL },
+  headerTitle: { fontSize: 16, fontWeight: '700', color: DARK },
+  scroll:      { flex: 1 },
+  content:     { paddingBottom: 60 },
 
-  hero:       { backgroundColor: TEAL_DEEP, paddingVertical: 48, paddingHorizontal: 24, alignItems: 'center', gap: 12 },
-  iconWrap:   { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  heroTitle:  { fontSize: 28, fontWeight: '800', color: WHITE, textAlign: 'center' },
-  heroSub:    { fontSize: 14, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 22, maxWidth: 480 },
-  heroDate:   { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4 },
+  // Hero
+  hero:        { background: `linear-gradient(135deg, ${TEAL_DEEP}, ${TEAL_DARK})` as any, backgroundColor: TEAL_DEEP, paddingVertical: 56, paddingHorizontal: 24, alignItems: 'center', gap: 14 },
+  heroIcon:    { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  heroTitle:   { fontSize: 30, fontWeight: '800', color: WHITE, textAlign: 'center' },
+  heroSub:     { fontSize: 15, color: 'rgba(255,255,255,0.8)', textAlign: 'center', lineHeight: 24, maxWidth: 420 },
+  heroBadge:   { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6, marginTop: 4 },
+  heroBadgeTxt:{ fontSize: 12, color: 'rgba(255,255,255,0.9)', fontWeight: '600' },
 
-  body:       { paddingHorizontal: 24, paddingTop: 32, gap: 0, maxWidth: 760, alignSelf: 'center', width: '100%' },
-  section:    { paddingVertical: 24, borderBottomWidth: 1, borderBottomColor: BORDER },
-  secTitle:   { fontSize: 16, fontWeight: '700', color: TEAL_DEEP, marginBottom: 10 },
-  secBody:    { fontSize: 14, color: MID, lineHeight: 23 },
+  // TL;DR
+  promisesWrap:  { paddingHorizontal: 20, paddingTop: 32, paddingBottom: 8, maxWidth: 800, alignSelf: 'center', width: '100%' },
+  promisesLabel: { fontSize: 11, fontWeight: '800', color: MID, letterSpacing: 2, textAlign: 'center', marginBottom: 16 },
+  promisesGrid:  { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' },
+  promiseCard:   { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, borderWidth: 1, minWidth: 200, flex: 1 },
+  promiseIcon:   { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  promiseTxt:    { fontSize: 13, fontWeight: '700', flex: 1 },
 
-  footer:     { alignItems: 'center', paddingVertical: 32, gap: 10 },
-  footerTxt:  { fontSize: 12, color: MID },
-  footerLink: { fontSize: 13, color: TEAL, fontWeight: '600' },
+  // Sections
+  body:        { paddingHorizontal: 20, paddingTop: 24, gap: 16, maxWidth: 800, alignSelf: 'center', width: '100%' },
+  card:        { backgroundColor: WHITE, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: BORDER, shadowColor: DARK, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  cardHeader:  { flexDirection: 'row', alignItems: 'flex-start', gap: 14, marginBottom: 14 },
+  cardIcon:    { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  cardTitles:  { flex: 1, gap: 3 },
+  cardTitle:   { fontSize: 16, fontWeight: '700', color: DARK },
+  cardFriendly:{ fontSize: 13, fontWeight: '500' },
+  cardBody:    { fontSize: 14, color: MID, lineHeight: 23 },
+
+  // Footer
+  footer:      { paddingHorizontal: 20, paddingTop: 32, alignItems: 'center', gap: 16, maxWidth: 800, alignSelf: 'center', width: '100%' },
+  footerCard:  { backgroundColor: TEAL + '10', borderRadius: 20, padding: 28, alignItems: 'center', gap: 10, width: '100%', borderWidth: 1, borderColor: TEAL + '30' },
+  footerTitle: { fontSize: 20, fontWeight: '700', color: DARK, textAlign: 'center' },
+  footerSub:   { fontSize: 14, color: MID, textAlign: 'center', lineHeight: 22, maxWidth: 360 },
+  footerBtn:   { backgroundColor: TEAL, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12, marginTop: 6 },
+  footerBtnTxt:{ color: WHITE, fontWeight: '700', fontSize: 14 },
+  footerCopy:  { fontSize: 12, color: MID },
 });
