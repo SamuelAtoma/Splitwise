@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Platform, Dimensions,
+  Platform, useWindowDimensions,
 } from 'react-native';
 
 const TEAL      = '#17B8B8';
@@ -157,8 +157,9 @@ export default function LandingPage({ onGetStarted, onSignIn, onPrivacy, onTerms
   const [groups,     setGroups]     = useState(2847);
   const [markets,    setMarkets]    = useState(12);
   const marqueeRef = useRef<any>(null);
-  const { width: SW } = Dimensions.get('window');
-  const wide = SW > 768;
+  const { width: SW } = useWindowDimensions();
+  const wide   = SW >= 768;   // desktop/tablet landscape
+  const mobile = SW < 480;    // phone portrait
 
   // Exact replication of index.html setInterval(updateCounters, 10)
   useEffect(() => {
@@ -238,23 +239,23 @@ export default function LandingPage({ onGetStarted, onSignIn, onPrivacy, onTerms
 
         {/* ══ BIG TITLE ══ */}
         <View style={s.bigTitle}>
-          <Text style={s.bigTitleTxt}>SPLITWI<Text style={{ color: TEAL_DARK }}>$</Text>E</Text>
+          <Text style={[s.bigTitleTxt, mobile && s.bigTitleMobile]}>SPLITWI<Text style={{ color: TEAL_DARK }}>$</Text>E</Text>
         </View>
 
         {/* ══ HERO ══ */}
-        <View style={[s.hero, wide && s.heroWide]}>
+        <View style={[s.hero, mobile && s.heroMobile, wide && s.heroWide]}>
           {/* Text */}
           <View style={[s.heroText, wide && { flex: 1 }]}>
-            <Text style={s.heroH2}>Shop Together,{'\n'}Save Together</Text>
-            <Text style={s.heroTagline}>Discover shoppers nearby. Order together.</Text>
-            <Text style={s.heroDesc}>
+            <Text style={[s.heroH2, mobile && s.heroH2Mobile]}>Shop Together,{'\n'}Save Together</Text>
+            <Text style={[s.heroTagline, mobile && s.heroTaglineMobile]}>Discover shoppers nearby. Order together.</Text>
+            <Text style={[s.heroDesc, mobile && s.heroDescMobile]}>
               Find real people near you ordering from the same online market — in your estate, hostel, or neighbourhood. Filter, connect, and split delivery costs together.
             </Text>
-            <View style={[s.ctaRow, !wide && s.ctaRowCol]}>
-              <TouchableOpacity style={s.btnPrimary} onPress={onGetStarted} activeOpacity={0.85}>
+            <View style={[s.ctaRow, (mobile || !wide) && s.ctaRowCol]}>
+              <TouchableOpacity style={[s.btnPrimary, mobile && s.btnFull]} onPress={onGetStarted} activeOpacity={0.85}>
                 <Text style={s.btnPrimaryTxt}>Start Shopping Now</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={s.btnSecondary} onPress={onSignIn} activeOpacity={0.85}>
+              <TouchableOpacity style={[s.btnSecondary, mobile && s.btnFull]} onPress={onSignIn} activeOpacity={0.85}>
                 <Text style={s.btnSecondaryTxt}>Sign In</Text>
               </TouchableOpacity>
             </View>
@@ -303,14 +304,14 @@ export default function LandingPage({ onGetStarted, onSignIn, onPrivacy, onTerms
         </View>
 
         {/* ══ FEATURES ══ */}
-        <View style={s.featuresSection}>
+        <View style={[s.featuresSection, mobile && s.sectionMobile]}>
           <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Why Choose SPLITWI$E?</Text>
-            <Text style={s.sectionSub}>The easiest way to find people ordering from the same place as you</Text>
+            <Text style={[s.sectionTitle, mobile && s.sectionTitleMobile]}>Why Choose SPLITWI$E?</Text>
+            <Text style={[s.sectionSub, mobile && s.sectionSubMobile]}>The easiest way to find people ordering from the same place as you</Text>
           </View>
           <View style={[s.featuresGrid, wide && s.featuresGridWide]}>
             {FEATURES.map((f, i) => (
-              <View key={i} style={[s.featureCard, wide && { width:'30%' }]}>
+              <View key={i} style={[s.featureCard, mobile && s.featureCardMobile, wide && { width:'30%' }]}>
                 <View style={s.featureIcon}>
                   {Platform.OS === 'web'
                     ? <div dangerouslySetInnerHTML={{ __html: SVG_ICONS[i] }} />
@@ -325,14 +326,14 @@ export default function LandingPage({ onGetStarted, onSignIn, onPrivacy, onTerms
         </View>
 
         {/* ══ HOW IT WORKS ══ */}
-        <View style={s.howSection}>
+        <View style={[s.howSection, mobile && s.sectionMobile]}>
           <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>How It Works</Text>
-            <Text style={s.sectionSub}>Get started in just 3 steps</Text>
+            <Text style={[s.sectionTitle, mobile && s.sectionTitleMobile]}>How It Works</Text>
+            <Text style={[s.sectionSub, mobile && s.sectionSubMobile]}>Get started in just 3 steps</Text>
           </View>
           <View style={[s.stepsRow, wide && s.stepsRowWide]}>
             {STEPS.map((st, i) => (
-              <View key={i} style={[s.stepCard, wide && { flex:1 }]}>
+              <View key={i} style={[s.stepCard, mobile && s.stepCardMobile, wide && { flex:1 }]}>
                 <View style={s.stepNum}><Text style={s.stepNumTxt}>{st.n}</Text></View>
                 <Text style={s.stepTitle}>{st.title}</Text>
                 <Text style={s.stepDesc}>{st.desc}</Text>
@@ -342,26 +343,26 @@ export default function LandingPage({ onGetStarted, onSignIn, onPrivacy, onTerms
         </View>
 
         {/* ══ STATS ══ */}
-        <View style={s.statsSection}>
-          <View style={[s.statsRow, wide && s.statsRowWide]}>
+        <View style={[s.statsSection, mobile && s.statsSectionMobile]}>
+          <View style={[s.statsRow, mobile && s.statsRowGrid, wide && s.statsRowWide]}>
             {[
               { val: shoppers.toLocaleString(), label:'Active Shoppers' },
               { val: formatCurrency(saved),     label:'Saved Together' },
               { val: groups.toLocaleString(),   label:'Groups Formed' },
               { val: String(markets),            label:'Online Markets' },
             ].map((st, i) => (
-              <View key={i} style={s.statItem}>
-                <Text style={s.statNum}>{st.val}</Text>
-                <Text style={s.statLabel}>{st.label}</Text>
+              <View key={i} style={[s.statItem, mobile && s.statItemGrid]}>
+                <Text style={[s.statNum, mobile && s.statNumMobile]}>{st.val}</Text>
+                <Text style={[s.statLabel, mobile && s.statLabelMobile]}>{st.label}</Text>
               </View>
             ))}
           </View>
         </View>
 
         {/* ══ FINAL CTA ══ */}
-        <View style={s.finalCta}>
-          <Text style={s.finalTitle}>Your Community Is Already Here</Text>
-          <Text style={s.finalSub}>
+        <View style={[s.finalCta, mobile && s.sectionMobile]}>
+          <Text style={[s.finalTitle, mobile && s.sectionTitleMobile]}>Your Community Is Already Here</Text>
+          <Text style={[s.finalSub, mobile && s.sectionSubMobile]}>
             Thousands of shoppers — students, residents, and workers — near you are already on SPLITWI$E. See who's ordering nearby and start saving together.
           </Text>
           <View style={[s.ctaRow, !wide && s.ctaRowCol, { justifyContent:'center' }]}>
@@ -415,24 +416,30 @@ const s = StyleSheet.create({
   solidBtnTxt:   { fontSize:13,fontWeight:'600',color:WHITE },
 
   // Big title
-  bigTitle:    { paddingTop:30,paddingHorizontal:24,alignItems:'center' },
-  bigTitleTxt: { fontSize:Platform.OS==='web'?96:48,fontWeight:'900',color:TEAL,letterSpacing:8,textAlign:'center',textShadowColor:'rgba(23,184,184,0.15)',textShadowOffset:{width:0,height:4},textShadowRadius:20 },
+  bigTitle:      { paddingTop:30,paddingHorizontal:24,alignItems:'center' },
+  bigTitleTxt:   { fontSize:96,fontWeight:'900',color:TEAL,letterSpacing:8,textAlign:'center',textShadowColor:'rgba(23,184,184,0.15)',textShadowOffset:{width:0,height:4},textShadowRadius:20 },
+  bigTitleMobile:{ fontSize:42,letterSpacing:4 },
 
   // Hero
-  hero:        { padding:32,paddingTop:20,gap:32 },
-  heroWide:    { flexDirection:'row',alignItems:'center',gap:64 },
-  heroText:    { gap:16 },
-  heroH2:      { fontSize:Platform.OS==='web'?56:28,fontWeight:'700',color:DARK,lineHeight:Platform.OS==='web'?68:36 },
-  heroTagline: { fontSize:Platform.OS==='web'?29:18,fontWeight:'600',color:TEAL },
-  heroDesc:    { fontSize:Platform.OS==='web'?17:14,color:MID,lineHeight:27 },
+  hero:           { padding:32,paddingTop:20,gap:32 },
+  heroMobile:     { padding:20,paddingTop:12,gap:20 },
+  heroWide:       { flexDirection:'row',alignItems:'center',gap:64 },
+  heroText:       { gap:16 },
+  heroH2:         { fontSize:52,fontWeight:'700',color:DARK,lineHeight:64 },
+  heroH2Mobile:   { fontSize:28,lineHeight:36 },
+  heroTagline:    { fontSize:26,fontWeight:'600',color:TEAL },
+  heroTaglineMobile:{ fontSize:17 },
+  heroDesc:       { fontSize:17,color:MID,lineHeight:27 },
+  heroDescMobile: { fontSize:14,lineHeight:22 },
 
   // CTA
   ctaRow:         { flexDirection:'row',gap:16,flexWrap:'wrap',marginTop:8 },
-  ctaRowCol:      { flexDirection:'column' },
+  ctaRowCol:      { flexDirection:'column',gap:12 },
   btnPrimary:     { backgroundColor:TEAL,paddingHorizontal:36,paddingVertical:16,borderRadius:10,shadowColor:TEAL,shadowOffset:{width:0,height:8},shadowOpacity:0.25,shadowRadius:20,elevation:5 },
   btnPrimaryTxt:  { color:WHITE,fontWeight:'600',fontSize:16 },
   btnSecondary:   { backgroundColor:WHITE,paddingHorizontal:36,paddingVertical:16,borderRadius:10,borderWidth:2,borderColor:TEAL },
   btnSecondaryTxt:{ color:TEAL,fontWeight:'600',fontSize:16 },
+  btnFull:        { alignItems:'center', alignSelf:'stretch' as any },
 
   // Map
   mapBox:    { height:350,borderRadius:20,overflow:'hidden',borderWidth:2,borderColor:BORDER,shadowColor:TEAL,shadowOffset:{width:0,height:20},shadowOpacity:0.2,shadowRadius:60,elevation:10,backgroundColor:'#EEF9F9',position:'relative' },
@@ -472,13 +479,25 @@ const s = StyleSheet.create({
   stepTitle:   { fontSize:Platform.OS==='web'?21:16,fontWeight:'600',color:DARK,marginBottom:12,textAlign:'center' },
   stepDesc:    { fontSize:Platform.OS==='web'?15:13,color:MID,lineHeight:Platform.OS==='web'?26:20,textAlign:'center' },
 
+  // Mobile section overrides
+  sectionMobile:      { padding:28,paddingHorizontal:20 },
+  sectionTitleMobile: { fontSize:22,marginBottom:8 },
+  sectionSubMobile:   { fontSize:13 },
+  featureCardMobile:  { padding:20 },
+  stepCardMobile:     { padding:24 },
+
   // Stats — gradient like original (linear-gradient(135deg, #17B8B8 0%, #0A6E6E 100%))
-  statsSection:{ paddingVertical:64,paddingHorizontal:40,backgroundColor:TEAL_DEEP },
-  statsRow:    { gap:32 },
-  statsRowWide:{ flexDirection:'row',justifyContent:'space-around' },
-  statItem:    { alignItems:'center' },
-  statNum:     { fontSize:Platform.OS==='web'?51:32,fontWeight:'700',color:WHITE,fontVariant:['tabular-nums'],letterSpacing:2,marginBottom:8 },
-  statLabel:   { fontSize:Platform.OS==='web'?16:13,color:'rgba(255,255,255,0.9)' },
+  statsSection:     { paddingVertical:64,paddingHorizontal:40,backgroundColor:TEAL_DEEP },
+  statsSectionMobile:{ paddingVertical:36,paddingHorizontal:20 },
+  statsRow:         { gap:32 },
+  statsRowWide:     { flexDirection:'row',justifyContent:'space-around' },
+  statsRowGrid:     { flexDirection:'row',flexWrap:'wrap',gap:0 },
+  statItem:         { alignItems:'center' },
+  statItemGrid:     { width:'50%',paddingVertical:20,alignItems:'center' },
+  statNum:          { fontSize:Platform.OS==='web'?51:32,fontWeight:'700',color:WHITE,fontVariant:['tabular-nums'],letterSpacing:2,marginBottom:8 },
+  statNumMobile:    { fontSize:28,letterSpacing:1,marginBottom:4 },
+  statLabel:        { fontSize:Platform.OS==='web'?16:13,color:'rgba(255,255,255,0.9)' },
+  statLabelMobile:  { fontSize:12 },
 
   // Final CTA
   finalCta:  { padding:64,paddingHorizontal:40,alignItems:'center' },

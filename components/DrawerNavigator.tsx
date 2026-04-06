@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated,
-  Dimensions, Platform, ScrollView, TextInput,
+  Dimensions, Platform, ScrollView, TextInput, Image,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import MapScreenComponent from './MapScreen';
@@ -486,13 +486,14 @@ function HomeScreen({ profile, email, onNavigate }: {
 // ══════════════════════════════════════════════════════════════
 // PROFILE SCREEN
 // ══════════════════════════════════════════════════════════════
-function ProfileScreen({ profile, email, onSignOut }: {
-  profile: any | null; email: string; onSignOut: () => void;
+function ProfileScreen({ profile, email, onSignOut, onEditProfile }: {
+  profile: any | null; email: string; onSignOut: () => void; onEditProfile?: () => void;
 }) {
   const getInitials = () => {
     if (!profile) return '??';
     return `${profile.first_name?.[0]||''}${profile.last_name?.[0]||''}`.toUpperCase();
   };
+  const avatarIsUrl = profile?.avatar_emoji?.startsWith?.('http');
 
   return (
     <ScrollView style={{flex:1}} contentContainerStyle={s.profileScroll} showsVerticalScrollIndicator={false}>
@@ -501,9 +502,14 @@ function ProfileScreen({ profile, email, onSignOut }: {
 
       <View style={s.profileHero}>
         <View style={s.profileAvatar}>
-          {profile?.avatar_emoji
-            ? <Text style={{fontSize:40}}>{profile.avatar_emoji}</Text>
-            : <Text style={s.profileAvatarTxt}>{getInitials()}</Text>
+          {avatarIsUrl
+            ? <Image source={{ uri: profile.avatar_emoji }} style={s.profileAvatarImg} />
+            : (profile?.avatar_emoji && profile.avatar_emoji.length <= 4
+                ? <Text style={{fontSize:40}}>{profile.avatar_emoji}</Text>
+                : <View style={[s.profileAvatarInitials, { backgroundColor: profile?.theme_color || TEAL }]}>
+                    <Text style={s.profileAvatarTxt}>{getInitials()}</Text>
+                  </View>
+              )
           }
         </View>
         <Text style={s.profileName}>{profile?.display_name||`${profile?.first_name||''} ${profile?.last_name||''}`}</Text>
@@ -514,6 +520,11 @@ function ProfileScreen({ profile, email, onSignOut }: {
             <Text style={s.activeBadgeTxt}>Account Active</Text>
           </View>
         </View>
+        {onEditProfile && (
+          <TouchableOpacity style={s.editProfileBtn} onPress={onEditProfile}>
+            <Text style={s.editProfileBtnTxt}>Edit Profile</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={s.infoCard}>
@@ -590,9 +601,9 @@ const navItems: { screen: ScreenName; icon: (active: boolean) => any; label: str
 // ══════════════════════════════════════════════════════════════
 // DRAWER NAVIGATOR
 // ══════════════════════════════════════════════════════════════
-interface DrawerProps { onSignOut: () => void; }
+interface DrawerProps { onSignOut: () => void; onEditProfile?: () => void; }
 
-export default function DrawerNavigator({ onSignOut }: DrawerProps) {
+export default function DrawerNavigator({ onSignOut, onEditProfile }: DrawerProps) {
   const [activeScreen,  setActiveScreen]  = useState<ScreenName>('Home');
   const [drawerOpen,    setDrawerOpen]    = useState(false);
   const [profile,       setProfile]       = useState<any|null>(null);
@@ -676,9 +687,12 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
           <View style={s.drawerFrost}/>
         </View>
         <View style={s.drawerAvatar}>
-          {profile?.avatar_emoji
-            ? <Text style={{fontSize:30}}>{profile.avatar_emoji}</Text>
-            : <Text style={s.drawerAvatarTxt}>{getInitials()}</Text>
+          {profile?.avatar_emoji?.startsWith?.('http')
+            ? <Image source={{ uri: profile.avatar_emoji }} style={s.drawerAvatarImg} />
+            : (profile?.avatar_emoji && profile.avatar_emoji.length <= 4
+                ? <Text style={{fontSize:30}}>{profile.avatar_emoji}</Text>
+                : <Text style={s.drawerAvatarTxt}>{getInitials()}</Text>
+              )
           }
         </View>
         <Text style={s.drawerName}>{profile?.display_name||`${profile?.first_name||''} ${profile?.last_name||''}`}</Text>
@@ -761,7 +775,7 @@ export default function DrawerNavigator({ onSignOut }: DrawerProps) {
             <ChatScreen groupId={activeChatId}/>
           )}
           {activeScreen === 'Profile' && (
-            <ProfileScreen profile={profile} email={email} onSignOut={handleSignOut}/>
+            <ProfileScreen profile={profile} email={email} onSignOut={handleSignOut} onEditProfile={onEditProfile}/>
           )}
           {activeScreen === 'FCCPC' && (
             <FCCPCScreen/>
@@ -839,8 +853,9 @@ const s = StyleSheet.create({
   drawerMapBg:     { position:'absolute',top:0,left:0,right:0,bottom:0,overflow:'hidden' },
   dgH:             { position:'absolute',left:0,right:0,height:1,backgroundColor:'#FFFFFF15' },
   drawerFrost:     { position:'absolute',top:0,left:0,right:0,bottom:0,backgroundColor:'#0A6E6E88' },
-  drawerAvatar:    { width:64,height:64,borderRadius:32,backgroundColor:WHITE+'33',borderWidth:2,borderColor:WHITE+'66',alignItems:'center',justifyContent:'center',marginBottom:12 },
+  drawerAvatar:    { width:64,height:64,borderRadius:32,backgroundColor:WHITE+'33',borderWidth:2,borderColor:WHITE+'66',alignItems:'center',justifyContent:'center',marginBottom:12,overflow:'hidden' },
   drawerAvatarTxt: { fontSize:22,fontWeight:'900',color:WHITE },
+  drawerAvatarImg: { width:64,height:64,borderRadius:32 },
   drawerName:      { fontSize:17,fontWeight:'800',color:WHITE,marginBottom:3 },
   drawerEmail:     { fontSize:12,color:WHITE+'BB',marginBottom:10 },
   drawerBadge:     { backgroundColor:WHITE+'22',paddingHorizontal:10,paddingVertical:4,borderRadius:12,alignSelf:'flex-start' },
@@ -920,8 +935,12 @@ const s = StyleSheet.create({
 
   profileScroll:    { paddingBottom:40 },
   profileHero:      { alignItems:'center',paddingTop:32,paddingBottom:24,marginHorizontal:16,marginBottom:16,backgroundColor:WHITE,borderRadius:20,borderWidth:1,borderColor:LIGHT_BORDER,shadowColor:TEAL,shadowOffset:{width:0,height:4},shadowOpacity:0.08,shadowRadius:16,elevation:4 },
-  profileAvatar:    { width:88,height:88,borderRadius:44,backgroundColor:TEAL_DARK,alignItems:'center',justifyContent:'center',marginBottom:12 },
-  profileAvatarTxt: { fontSize:32,fontWeight:'900',color:WHITE },
+  profileAvatar:        { width:88,height:88,borderRadius:44,overflow:'hidden',alignItems:'center',justifyContent:'center',marginBottom:12 },
+  profileAvatarImg:     { width:88,height:88,borderRadius:44 },
+  profileAvatarInitials:{ width:88,height:88,borderRadius:44,alignItems:'center',justifyContent:'center' },
+  profileAvatarTxt:     { fontSize:32,fontWeight:'900',color:WHITE },
+  editProfileBtn:       { marginTop:14,paddingHorizontal:24,paddingVertical:9,borderRadius:10,borderWidth:1.5,borderColor:TEAL,backgroundColor:'transparent' },
+  editProfileBtnTxt:    { color:TEAL,fontWeight:'700',fontSize:14 },
   profileName:      { fontSize:22,fontWeight:'800',color:DARK,marginBottom:4 },
   profileEmail:     { fontSize:13,color:MID,marginBottom:12 },
   activeBadge:      { backgroundColor:'#F0FFF4',borderWidth:1,borderColor:'#68D391',paddingHorizontal:14,paddingVertical:5,borderRadius:20 },

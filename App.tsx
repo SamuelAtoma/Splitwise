@@ -113,7 +113,7 @@ export default function App() {
         />
       )}
       {screen === 'dashboard' && (
-        <DrawerNavigator onSignOut={() => navigate('landing')} />
+        <DrawerNavigator onSignOut={() => navigate('landing')} onEditProfile={() => navigate('profile_setup')} />
       )}
       {screen === 'privacy' && (
         <PrivacyPolicy onBack={() => navigate('landing')} />
