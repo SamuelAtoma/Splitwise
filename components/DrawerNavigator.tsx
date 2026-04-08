@@ -352,9 +352,12 @@ function HomeScreen({ profile, email, onNavigate }: {
           <Text style={s.heroSub}>Ready to split & save today?</Text>
         </View>
         <View style={s.heroAvatar}>
-          {profile?.avatar_emoji
-            ? <Text style={{fontSize:30}}>{profile.avatar_emoji}</Text>
-            : <Text style={s.heroAvatarTxt}>{getInitials()}</Text>
+          {profile?.avatar_emoji?.startsWith?.('http')
+            ? <Image source={{ uri: profile.avatar_emoji }} style={s.heroAvatarImg} />
+            : (profile?.avatar_emoji && profile.avatar_emoji.length <= 4
+                ? <Text style={{fontSize:26}}>{profile.avatar_emoji}</Text>
+                : <Text style={s.heroAvatarTxt}>{getInitials()}</Text>
+              )
           }
         </View>
       </View>
@@ -882,8 +885,9 @@ const s = StyleSheet.create({
   heroSub:       { fontSize:12,color:WHITE+'BB',marginBottom:14 },
   heroBtn:       { backgroundColor:WHITE+'22',paddingHorizontal:14,paddingVertical:8,borderRadius:20,borderWidth:1,borderColor:WHITE+'33',alignSelf:'flex-start' },
   heroBtnTxt:    { color:WHITE,fontSize:12,fontWeight:'700' },
-  heroAvatar:    { width:56,height:56,borderRadius:28,backgroundColor:WHITE+'22',borderWidth:2,borderColor:WHITE+'44',alignItems:'center',justifyContent:'center',marginLeft:12 },
+  heroAvatar:    { width:56,height:56,borderRadius:28,backgroundColor:WHITE+'22',borderWidth:2,borderColor:WHITE+'44',alignItems:'center',justifyContent:'center',marginLeft:12,overflow:'hidden' },
   heroAvatarTxt: { fontSize:20,fontWeight:'900',color:WHITE },
+  heroAvatarImg: { width:56,height:56,borderRadius:28 },
 
   statsRow:     { flexDirection:'row',gap:10,marginHorizontal:16,marginBottom:16 },
   statCard:     { flex:1,backgroundColor:WHITE,borderRadius:14,padding:14,alignItems:'center',borderWidth:1,borderColor:LIGHT_BORDER,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:2 },

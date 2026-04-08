@@ -100,14 +100,14 @@ export default function ProfileSetup({ onComplete, onBack }: Props) {
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id:           user.id,
           first_name:   firstName.trim(),
           last_name:    lastName.trim(),
           display_name: displayName,
           avatar_emoji: photoUri || initials,   // URL if uploaded, else initials
           theme_color:  selectedTheme.primary,
-        })
-        .eq('id', user.id);
+        }, { onConflict: 'id' });
 
       if (updateError) throw updateError;
       onComplete();
