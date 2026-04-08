@@ -125,13 +125,14 @@ const svgPin = (color: string) => `
 // ══════════════════════════════════════════════════════════════
 // WEB MAP
 // ══════════════════════════════════════════════════════════════
-function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMarket }: {
+function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMarket, filterMarket }: {
   location: { lat: number; lng: number };
   mapUsers: MapUser[];
   radius: number;
   onUserTap: (user: MapUser) => void;
   myProfile: any;
   selectedMarket: any;
+  filterMarket: Market | null;
 }) {
   const mapContainerRef  = useRef<any>(null);
   const mapRef           = useRef<any>(null);
@@ -195,7 +196,7 @@ function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMark
           .setLngLat([location.lng, location.lat])
           .addTo(map);
 
-        addUserMarkers(map, mapboxgl, mapUsers, onUserTap);
+        addUserMarkers(map, mapboxgl, mapUsers, onUserTap, filterMarket);
       });
 
       map.on('error', (err: any) => {
@@ -235,9 +236,9 @@ function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMark
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
     import('mapbox-gl').then(({ default: mapboxgl }) => {
-      addUserMarkers(map, mapboxgl, mapUsers, onUserTap);
+      addUserMarkers(map, mapboxgl, mapUsers, onUserTap, filterMarket);
     });
-  }, [mapUsers]);
+  }, [mapUsers, filterMarket]);
 
   useEffect(() => {
     if (!mapRef.current || Platform.OS !== 'web') return;
@@ -247,15 +248,24 @@ function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMark
     if (src) src.setData(createCircle(location.lat, location.lng, radius));
   }, [radius]);
 
-  const addUserMarkers = (map: any, mapboxgl: any, users: MapUser[], onTap: (u: MapUser) => void) => {
+  const addUserMarkers = (map: any, mapboxgl: any, users: MapUser[], onTap: (u: MapUser) => void, filter: Market | null) => {
     users.forEach(u => {
       const emoji = u.profile?.avatar_emoji || '🧑';
       const name  = u.profile?.first_name   || '?';
-      const color = u.is_pooling ? '#2F855A' : TEAL_DARK;
-      const el    = document.createElement('div');
+      const isFiltering = filter !== null;
+      const isMatch = !isFiltering || u.market_name?.toLowerCase() === filter?.name?.toLowerCase();
+      const color = isMatch ? (u.is_pooling ? '#2F855A' : TEAL_DARK) : '#9BB8B8';
+      const avatarShadow = isFiltering && isMatch
+        ? '0 0 0 4px rgba(23,184,184,0.4), 0 4px 24px rgba(23,184,184,0.35)'
+        : '0 4px 20px rgba(0,0,0,0.2)';
+      const el = document.createElement('div');
       el.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;gap:2px;">
-          ${u.market_name ? `<div style="background:white;color:${TEAL_DEEP};font-size:9px;font-weight:800;
+        <div style="display:flex;flex-direction:column;align-items:center;cursor:${isMatch ? 'pointer' : 'default'};gap:2px;
+          opacity:${isFiltering && !isMatch ? '0.18' : '1'};
+          filter:${isFiltering && !isMatch ? 'blur(1.5px) grayscale(0.9)' : 'none'};
+          transition:opacity 0.3s,filter 0.3s;
+          pointer-events:${isFiltering && !isMatch ? 'none' : 'auto'};">
+          ${u.market_name ? `<div style="background:${isMatch ? 'white' : '#f0f0f0'};color:${isMatch ? TEAL_DEEP : '#aaa'};font-size:9px;font-weight:800;
             padding:2px 8px;border-radius:6px;border:1.5px solid ${color};white-space:nowrap;">${u.market_name}</div>` : ''}
           <div style="position:relative;">
             ${u.is_pooling ? `<div style="position:absolute;top:-8px;right:-8px;z-index:2;
@@ -264,12 +274,12 @@ function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMark
             <div style="width:52px;height:52px;border-radius:50%;background:white;
               border:3px solid ${color};display:flex;align-items:center;
               justify-content:center;font-size:24px;
-              box-shadow:0 4px 20px rgba(0,0,0,0.25);">${emoji}</div>
+              box-shadow:${avatarShadow};">${emoji}</div>
           </div>
           <div style="background:${color};color:white;font-size:10px;font-weight:800;
             padding:3px 10px;border-radius:8px;white-space:nowrap;">${name}</div>
         </div>`;
-      el.addEventListener('click', () => onTap(u));
+      if (isMatch) el.addEventListener('click', () => onTap(u));
       const marker = new mapboxgl.Marker({ element: el, anchor:'bottom' })
         .setLngLat([u.lng, u.lat])
         .addTo(map);
@@ -593,6 +603,8 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
   const [mapUsers,        setMapUsers]        = useState<MapUser[]>([]);
   const [radius,          setRadius]          = useState(3);
   const [showMarketModal, setShowMarketModal] = useState(false);
+  const [filterMarket,    setFilterMarket]    = useState<Market | null>(null);
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [selectedUser,    setSelectedUser]    = useState<MapUser | null>(null);
   const [showUserModal,   setShowUserModal]   = useState(false);
   const [chatLoading,     setChatLoading]     = useState(false);
@@ -872,7 +884,45 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
           onUserTap={(user) => { setSelectedUser(user); setShowUserModal(true); }}
           myProfile={myProfile}
           selectedMarket={selectedMarket}
+          filterMarket={filterMarket}
         />
+
+        {/* Filter bar — floating at top of map */}
+        <TouchableOpacity style={st.filterBar} onPress={() => setShowFilterModal(true)} activeOpacity={0.85}>
+          <View style={st.filterBarLeft}>
+            {Platform.OS === 'web' && (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={filterMarket ? TEAL_DARK : MID} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            )}
+            <Text style={[st.filterBarTxt, filterMarket && st.filterBarTxtActive]}>
+              {filterMarket ? filterMarket.name : 'Search market...'}
+            </Text>
+          </View>
+          {filterMarket ? (
+            <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); setFilterMarket(null); }} hitSlop={{ top:8, bottom:8, left:8, right:8 }}>
+              <Text style={st.filterBarClear}>✕</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={st.filterChevron}>
+              {Platform.OS === 'web' && (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={MID} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              )}
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* Filter active badge */}
+        {filterMarket && (
+          <View style={st.filterActiveBadge}>
+            <View style={st.filterActiveDot}/>
+            <Text style={st.filterActiveTxt}>
+              Showing {mapUsers.filter(u => u.market_name?.toLowerCase() === filterMarket.name.toLowerCase()).length} {filterMarket.name} shopper{mapUsers.filter(u => u.market_name?.toLowerCase() === filterMarket.name.toLowerCase()).length !== 1 ? 's' : ''}
+            </Text>
+          </View>
+        )}
 
         <View style={st.userCountBadge}>
           <View style={st.userCountDot}/>
@@ -954,6 +1004,12 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
         onSelect={handleSelectMarket}
         onClose={() => setShowMarketModal(false)}
       />
+      <MarketModal
+        visible={showFilterModal}
+        markets={markets}
+        onSelect={(m) => { setFilterMarket(m); setShowFilterModal(false); }}
+        onClose={() => setShowFilterModal(false)}
+      />
       <UserTapModal
         user={selectedUser}
         visible={showUserModal}
@@ -972,12 +1028,23 @@ const st = StyleSheet.create({
   root:         { flex:1, backgroundColor:DARK },
   mapContainer: { flex:1, position:'relative' },
 
-  userCountBadge: { position:'absolute',top:12,left:12,flexDirection:'row',alignItems:'center',gap:6,backgroundColor:'rgba(6,32,32,0.85)',paddingHorizontal:12,paddingVertical:7,borderRadius:20,borderWidth:1,borderColor:'#FFFFFF18' },
+  // Filter bar
+  filterBar:          { position:'absolute',top:12,left:12,right:56,flexDirection:'row',alignItems:'center',justifyContent:'space-between',backgroundColor:'rgba(248,254,254,0.97)',borderRadius:24,paddingHorizontal:14,paddingVertical:9,borderWidth:1.5,borderColor:BORDER,shadowColor:DARK,shadowOffset:{width:0,height:2},shadowOpacity:0.12,shadowRadius:8,elevation:6,zIndex:20 },
+  filterBarLeft:      { flexDirection:'row',alignItems:'center',gap:8,flex:1 },
+  filterBarTxt:       { fontSize:13,color:MID,fontWeight:'500' },
+  filterBarTxtActive: { color:TEAL_DARK,fontWeight:'700' },
+  filterBarClear:     { fontSize:16,color:MID,fontWeight:'700',paddingLeft:8 },
+  filterChevron:      { paddingLeft:4 },
+  filterActiveBadge:  { position:'absolute',top:58,left:12,flexDirection:'row',alignItems:'center',gap:6,backgroundColor:TEAL_DARK,paddingHorizontal:12,paddingVertical:6,borderRadius:20,zIndex:19 },
+  filterActiveDot:    { width:7,height:7,borderRadius:4,backgroundColor:'#68D391' },
+  filterActiveTxt:    { color:WHITE,fontSize:11,fontWeight:'700' },
+
+  userCountBadge: { position:'absolute',bottom:12,left:12,flexDirection:'row',alignItems:'center',gap:6,backgroundColor:'rgba(6,32,32,0.85)',paddingHorizontal:12,paddingVertical:7,borderRadius:20,borderWidth:1,borderColor:'#FFFFFF18' },
   userCountDot:   { width:7,height:7,borderRadius:4,backgroundColor:'#68D391' },
   userCountTxt:   { color:WHITE,fontSize:11,fontWeight:'700' },
-  radiusBadge:    { position:'absolute',top:12,right:56,flexDirection:'row',alignItems:'center',gap:5,backgroundColor:'rgba(6,32,32,0.85)',paddingHorizontal:12,paddingVertical:7,borderRadius:20,borderWidth:1,borderColor:TEAL+'40' },
+  radiusBadge:    { position:'absolute',top:12,right:12,flexDirection:'row',alignItems:'center',gap:5,backgroundColor:'rgba(6,32,32,0.85)',paddingHorizontal:12,paddingVertical:7,borderRadius:20,borderWidth:1,borderColor:TEAL+'40' },
   radiusBadgeTxt: { color:TEAL,fontSize:11,fontWeight:'700' },
-  recenterBtn:    { position:'absolute',top:8,right:12,width:38,height:38,borderRadius:19,backgroundColor:'rgba(6,32,32,0.85)',alignItems:'center',justifyContent:'center',borderWidth:1,borderColor:'#FFFFFF18' },
+  recenterBtn:    { position:'absolute',bottom:12,right:12,width:38,height:38,borderRadius:19,backgroundColor:'rgba(6,32,32,0.85)',alignItems:'center',justifyContent:'center',borderWidth:1,borderColor:'#FFFFFF18' },
 
   bottomPanel: { backgroundColor:WHITE,borderTopLeftRadius:24,borderTopRightRadius:24,paddingHorizontal:20,paddingTop:20,paddingBottom:Platform.OS==='ios'?36:20,shadowColor:'#000',shadowOffset:{width:0,height:-4},shadowOpacity:0.12,shadowRadius:16,elevation:10 },
 
