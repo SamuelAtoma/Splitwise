@@ -281,9 +281,9 @@ function HomeScreen({ profile, email, onNavigate }: {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   const stats = [
-    { num:'₦0', lbl:'Total\nSaved',   icon: Icons.savings(TEAL_DEEP, 15), color: TEAL_DEEP  },
-    { num:'0',  lbl:'Groups\nJoined', icon: Icons.groups('#6D28D9', 15),  color: '#6D28D9'  },
-    { num:'0',  lbl:'Orders\nSplit',  icon: Icons.orders('#B45309', 15),  color: '#B45309'  },
+    { num:'8+', lbl:'Markets\nSupported', icon: Icons.market(TEAL_DEEP, 15), color: TEAL_DEEP  },
+    { num:'0',  lbl:'Groups\nJoined',     icon: Icons.groups('#6D28D9', 15),  color: '#6D28D9'  },
+    { num:'0',  lbl:'Orders\nSplit',      icon: Icons.orders('#B45309', 15),  color: '#B45309'  },
   ];
 
   const quickActions = [
