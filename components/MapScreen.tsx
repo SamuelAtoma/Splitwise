@@ -262,27 +262,30 @@ function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMark
       const name  = u.profile?.first_name   || '?';
       const isFiltering = filter !== null;
       const isMatch = !isFiltering || u.market_name?.toLowerCase() === filter?.name?.toLowerCase();
-      const color = isMatch ? (u.is_pooling ? '#2F855A' : TEAL_DARK) : '#9BB8B8';
+      const color = isMatch ? (u.is_pooling ? '#2F855A' : TEAL_DARK) : '#C8C8C8';
+      const avatarSize = isFiltering && isMatch ? 58 : 52;
       const avatarShadow = isFiltering && isMatch
-        ? '0 0 0 4px rgba(23,184,184,0.4), 0 4px 24px rgba(23,184,184,0.35)'
+        ? '0 0 0 5px rgba(23,184,184,0.5), 0 0 0 9px rgba(23,184,184,0.15), 0 6px 28px rgba(23,184,184,0.4)'
         : '0 4px 20px rgba(0,0,0,0.2)';
       const el = document.createElement('div');
       el.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;cursor:${isMatch ? 'pointer' : 'default'};gap:2px;
-          opacity:${isFiltering && !isMatch ? '0.18' : '1'};
-          filter:${isFiltering && !isMatch ? 'blur(1.5px) grayscale(0.9)' : 'none'};
-          transition:opacity 0.3s,filter 0.3s;
+          opacity:${isFiltering && !isMatch ? '0.07' : '1'};
+          filter:${isFiltering && !isMatch ? 'blur(3px) grayscale(1)' : 'none'};
+          transform:${isFiltering && isMatch ? 'scale(1.08)' : 'scale(1)'};
+          transition:opacity 0.35s,filter 0.35s,transform 0.25s;
           pointer-events:${isFiltering && !isMatch ? 'none' : 'auto'};">
-          ${u.market_name ? `<div style="background:${isMatch ? 'white' : '#f0f0f0'};color:${isMatch ? TEAL_DEEP : '#aaa'};font-size:9px;font-weight:800;
-            padding:2px 8px;border-radius:6px;border:1.5px solid ${color};white-space:nowrap;">${u.market_name}</div>` : ''}
+          ${u.market_name ? `<div style="background:${isMatch ? TEAL_DARK : '#e8e8e8'};color:${isMatch ? 'white' : '#bbb'};font-size:9px;font-weight:800;
+            padding:3px 10px;border-radius:8px;border:none;white-space:nowrap;
+            box-shadow:${isMatch ? '0 2px 8px rgba(23,184,184,0.35)' : 'none'};">${u.market_name}</div>` : ''}
           <div style="position:relative;">
-            ${u.is_pooling ? `<div style="position:absolute;top:-8px;right:-8px;z-index:2;
+            ${u.is_pooling && isMatch ? `<div style="position:absolute;top:-8px;right:-8px;z-index:2;
               background:#276749;color:white;font-size:8px;font-weight:800;
               padding:2px 5px;border-radius:6px;">POOL</div>` : ''}
-            <div style="width:52px;height:52px;border-radius:50%;background:white;overflow:hidden;
-              border:3px solid ${color};display:flex;align-items:center;
+            <div style="width:${avatarSize}px;height:${avatarSize}px;border-radius:50%;background:white;overflow:hidden;
+              border:${isFiltering && isMatch ? '3.5px' : '2.5px'} solid ${color};display:flex;align-items:center;
               justify-content:center;
-              box-shadow:${avatarShadow};">${avatarHtml(emoji) || `<span style="font-size:24px;">🧑</span>`}</div>
+              box-shadow:${avatarShadow};">${avatarHtml(emoji, avatarSize) || `<span style="font-size:${Math.round(avatarSize*0.46)}px;">🧑</span>`}</div>
           </div>
           <div style="background:${color};color:white;font-size:10px;font-weight:800;
             padding:3px 10px;border-radius:8px;white-space:nowrap;">${name}</div>
