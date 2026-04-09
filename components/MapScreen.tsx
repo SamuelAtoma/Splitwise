@@ -1029,7 +1029,7 @@ const st = StyleSheet.create({
   mapContainer: { flex:1, position:'relative' },
 
   // Filter bar
-  filterBar:          { position:'absolute',top:12,left:12,right:56,flexDirection:'row',alignItems:'center',justifyContent:'space-between',backgroundColor:'rgba(248,254,254,0.97)',borderRadius:24,paddingHorizontal:14,paddingVertical:9,borderWidth:1.5,borderColor:BORDER,shadowColor:DARK,shadowOffset:{width:0,height:2},shadowOpacity:0.12,shadowRadius:8,elevation:6,zIndex:20 },
+  filterBar:          { position:'absolute',top:12,left:12,right:56,flexDirection:'row',alignItems:'center',justifyContent:'space-between',backgroundColor:'rgba(248,254,254,0.97)',borderRadius:24,paddingHorizontal:14,paddingVertical:9,borderWidth:1.5,borderColor:LIGHT_BORDER,shadowColor:DARK,shadowOffset:{width:0,height:2},shadowOpacity:0.12,shadowRadius:8,elevation:6,zIndex:20 },
   filterBarLeft:      { flexDirection:'row',alignItems:'center',gap:8,flex:1 },
   filterBarTxt:       { fontSize:13,color:MID,fontWeight:'500' },
   filterBarTxtActive: { color:TEAL_DARK,fontWeight:'700' },
