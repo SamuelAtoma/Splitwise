@@ -596,7 +596,7 @@ const navItems: { screen: ScreenName; icon: (active: boolean) => any; label: str
   { screen:'Home',    icon: a => Icons.home(   a?TEAL_DARK:MID, 18), label:'Home'            },
   { screen:'Map',     icon: a => Icons.map(    a?TEAL_DARK:MID, 18), label:'Nearby Map'      },
   { screen:'Groups',  icon: a => Icons.groups( a?TEAL_DARK:MID, 18), label:'Group Orders'    },
-  { screen:'Chat',    icon: a => Icons.chat(   a?TEAL_DARK:MID, 18), label:'In-App Chat'     },
+  { screen:'Chat',    icon: a => Icons.chat(   a?TEAL_DARK:MID, 18), label:'Chats'           },
   { screen:'Profile', icon: a => Icons.profile(a?TEAL_DARK:MID, 18), label:'My Profile'      },
   { screen:'FCCPC',   icon: a => Icons.shield( a?'#C53030':'#E53E3E', 18), label:'Report a Scam', accent:'#C53030' },
 ];
@@ -672,7 +672,7 @@ export default function DrawerNavigator({ onSignOut, onEditProfile }: DrawerProp
 
   const screenTitles: Record<ScreenName,string> = {
     Home:'Dashboard', Map:'Nearby Map', Groups:'Group Orders',
-    Chat:'In-App Chat', Profile:'My Profile', FCCPC:'Consumer Protection',
+    Chat:'Chats', Profile:'My Profile', FCCPC:'Consumer Protection',
   };
 
   const botScale   = botAnim.interpolate({ inputRange:[0,1], outputRange:[0.85,1] });

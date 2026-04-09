@@ -244,24 +244,30 @@ export default function ChatScreen({ groupId: initialGroupId }: Props) {
 
     if (!groupData) return;
 
-    // Get member counts
-    const enriched = await Promise.all(groupData.map(async (g:any) => {
-      const { count } = await supabase
-        .from('group_members').select('*', { count:'exact', head:true })
-        .eq('group_id', g.id);
-      return { ...g, member_count: count || 0 };
-    }));
+    // Get member counts in one query
+    const { data: memberCounts } = await supabase
+      .from('group_members').select('group_id')
+      .in('group_id', groupData.map((g:any) => g.id));
 
+    const countMap: Record<string,number> = {};
+    (memberCounts || []).forEach((r:any) => {
+      countMap[r.group_id] = (countMap[r.group_id] || 0) + 1;
+    });
+
+    const enriched = groupData.map((g:any) => ({ ...g, member_count: countMap[g.id] || 0 }));
     setGroups(enriched);
 
-    // Fetch last message for each group
+    // Fetch last message for each group in one query
+    const { data: lastMsgRows } = await supabase
+      .from('messages')
+      .select('*')
+      .in('group_id', enriched.map((g:any) => g.id))
+      .order('created_at', { ascending: false });
+
     const lastMsgs: Record<string,Message> = {};
-    await Promise.all(enriched.map(async (g:any) => {
-      const { data: lm } = await supabase
-        .from('messages').select('*').eq('group_id', g.id)
-        .order('created_at', { ascending: false }).limit(1).maybeSingle();
-      if (lm) lastMsgs[g.id] = lm;
-    }));
+    (lastMsgRows || []).forEach((msg:any) => {
+      if (!lastMsgs[msg.group_id]) lastMsgs[msg.group_id] = msg;
+    });
     setLastMessages(lastMsgs);
   };
 
@@ -515,8 +521,8 @@ export default function ChatScreen({ groupId: initialGroupId }: Props) {
       >
         {/* Header */}
         <View style={s.listHeader}>
-          <Text style={s.listTitle}>In-App Chat</Text>
-          <Text style={s.listSub}>All your group conversations</Text>
+          <Text style={s.listTitle}>Chats</Text>
+          <Text style={s.listSub}>Your conversations — always here when you return</Text>
         </View>
 
         {/* Stats */}
