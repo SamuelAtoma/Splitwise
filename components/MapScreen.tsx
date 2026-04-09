@@ -114,6 +114,14 @@ const ShieldIcon   = ({ s, sz=20 }: { s:string; sz?:number }) => (
   </SvgIcon>
 );
 
+// ── Avatar HTML helper — image if URL, emoji if short, initials fallback ──
+const avatarHtml = (avatarEmoji: string, size = 52) =>
+  avatarEmoji?.startsWith('http')
+    ? `<img src="${avatarEmoji}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;display:block;" />`
+    : avatarEmoji
+      ? `<span style="font-size:${Math.round(size * 0.46)}px;line-height:1;">${avatarEmoji}</span>`
+      : '';
+
 // ── Web map markers (SVG strings for HTML injection) ─────────
 const svgPin = (color: string) => `
   <svg width="22" height="28" viewBox="0 0 24 30" fill="none">
@@ -185,10 +193,10 @@ function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMark
           <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
             ${myMkt ? `<div style="background:white;color:${TEAL_DEEP};font-size:9px;font-weight:800;
               padding:2px 8px;border-radius:6px;border:1.5px solid ${TEAL_DARK};white-space:nowrap;">${myMkt}</div>` : ''}
-            <div style="width:52px;height:52px;border-radius:50%;background:white;
+            <div style="width:52px;height:52px;border-radius:50%;background:white;overflow:hidden;
               border:3px solid ${TEAL_DARK};display:flex;align-items:center;
-              justify-content:center;font-size:24px;
-              box-shadow:0 4px 20px rgba(13,143,143,0.5);">${myEmoji || svgPin(TEAL_DARK)}</div>
+              justify-content:center;
+              box-shadow:0 4px 20px rgba(13,143,143,0.5);">${avatarHtml(myEmoji) || svgPin(TEAL_DARK)}</div>
             <div style="background:${TEAL_DARK};color:white;font-size:10px;font-weight:800;
               padding:3px 10px;border-radius:8px;white-space:nowrap;">${myName}</div>
           </div>`;
@@ -220,10 +228,10 @@ function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMark
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
         ${myMkt ? `<div style="background:white;color:${TEAL_DEEP};font-size:9px;font-weight:800;
           padding:2px 8px;border-radius:6px;border:1.5px solid ${TEAL_DARK};white-space:nowrap;">${myMkt}</div>` : ''}
-        <div style="width:52px;height:52px;border-radius:50%;background:white;
+        <div style="width:52px;height:52px;border-radius:50%;background:white;overflow:hidden;
           border:3px solid ${TEAL_DARK};display:flex;align-items:center;
-          justify-content:center;font-size:24px;
-          box-shadow:0 4px 20px rgba(13,143,143,0.5);">${myEmoji || svgPin(TEAL_DARK)}</div>
+          justify-content:center;
+          box-shadow:0 4px 20px rgba(13,143,143,0.5);">${avatarHtml(myEmoji) || svgPin(TEAL_DARK)}</div>
         <div style="background:${TEAL_DARK};color:white;font-size:10px;font-weight:800;
           padding:3px 10px;border-radius:8px;white-space:nowrap;">${myName}</div>
       </div>`;
@@ -271,10 +279,10 @@ function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMark
             ${u.is_pooling ? `<div style="position:absolute;top:-8px;right:-8px;z-index:2;
               background:#276749;color:white;font-size:8px;font-weight:800;
               padding:2px 5px;border-radius:6px;">POOL</div>` : ''}
-            <div style="width:52px;height:52px;border-radius:50%;background:white;
+            <div style="width:52px;height:52px;border-radius:50%;background:white;overflow:hidden;
               border:3px solid ${color};display:flex;align-items:center;
-              justify-content:center;font-size:24px;
-              box-shadow:${avatarShadow};">${emoji}</div>
+              justify-content:center;
+              box-shadow:${avatarShadow};">${avatarHtml(emoji) || `<span style="font-size:24px;">🧑</span>`}</div>
           </div>
           <div style="background:${color};color:white;font-size:10px;font-weight:800;
             padding:3px 10px;border-radius:8px;white-space:nowrap;">${name}</div>
