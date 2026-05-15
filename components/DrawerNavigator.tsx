@@ -4,6 +4,8 @@ import {
   Dimensions, Platform, ScrollView, TextInput, Image,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { MapBg } from '../lib/utils';
+import { Icons } from '../lib/icons';
 import MapScreenComponent from './MapScreen';
 import GroupOrdersScreen from './GroupOrdersScreen';
 import ChatScreen from './ChatScreen';
@@ -21,65 +23,6 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const DRAWER_WIDTH = Math.min(300, SCREEN_WIDTH * 0.78);
 
 type ScreenName = 'Home' | 'Map' | 'Groups' | 'Chat' | 'Profile' | 'FCCPC';
-
-// ══════════════════════════════════════════════════════════════
-// SVG ICON SYSTEM
-// ══════════════════════════════════════════════════════════════
-function Svg({ size = 24, stroke = DARK, fill = 'none', children, style }: {
-  size?: number; stroke?: string; fill?: string; children: any; style?: any;
-}) {
-  if (Platform.OS !== 'web') return null;
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24"
-      fill={fill} stroke={stroke} strokeWidth="1.8"
-      strokeLinecap="round" strokeLinejoin="round"
-      style={{ display: 'block', ...style }}>
-      {children}
-    </svg>
-  ) as any;
-}
-
-const Icons = {
-  home:    (s: string, sz=24) => <Svg size={sz} stroke={s}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></Svg>,
-  map:     (s: string, sz=24) => <Svg size={sz} stroke={s}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" stroke={s} fill="none"/></Svg>,
-  groups:  (s: string, sz=24) => <Svg size={sz} stroke={s}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke={s} fill="none"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></Svg>,
-  chat:    (s: string, sz=24) => <Svg size={sz} stroke={s}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></Svg>,
-  profile: (s: string, sz=24) => <Svg size={sz} stroke={s}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4" stroke={s} fill="none"/></Svg>,
-  cart:    (s: string, sz=24) => <Svg size={sz} stroke={s}><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></Svg>,
-  savings: (s: string, sz=24) => <Svg size={sz} stroke={s}><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></Svg>,
-  orders:  (s: string, sz=24) => <Svg size={sz} stroke={s}><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></Svg>,
-  signout: (s: string, sz=24) => <Svg size={sz} stroke={s}><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></Svg>,
-  send:    (s: string, sz=16) => <Svg size={sz} stroke={s}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2" stroke={s} fill={s}/></Svg>,
-  close:   (s: string, sz=18) => <Svg size={sz} stroke={s} style={{ strokeWidth: 2.5 }}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Svg>,
-  bot:     (s: string, sz=20) => <Svg size={sz} stroke={s}><rect x="3" y="8" width="18" height="12" rx="3" fill="none"/><path d="M9 8V6a3 3 0 016 0v2"/><circle cx="9" cy="14" r="1.2" fill={s} stroke="none"/><circle cx="15" cy="14" r="1.2" fill={s} stroke="none"/><line x1="9" y1="17.5" x2="15" y2="17.5"/><line x1="12" y1="3" x2="12" y2="5"/></Svg>,
-  tip:     (s: string, sz=24) => <Svg size={sz} stroke={s}><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 017 7c0 2.5-1.3 4.7-3.3 6L15 17H9l-.7-2C6.3 13.7 5 11.5 5 9a7 7 0 017-7z"/></Svg>,
-  check:   (s: string, sz=16) => <Svg size={sz} stroke={s}><polyline points="20 6 9 17 4 12"/></Svg>,
-  activity:(s: string, sz=24) => <Svg size={sz} stroke={s}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></Svg>,
-  shield:  (s: string, sz=24) => <Svg size={sz} stroke={s}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></Svg>,
-  market:  (s: string, sz=24) => <Svg size={sz} stroke={s}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><rect x="9" y="12" width="6" height="9" rx="1"/></Svg>,
-};
-
-// ══════════════════════════════════════════════════════════════
-// MAP BACKGROUND
-// ══════════════════════════════════════════════════════════════
-function MapBg() {
-  return (
-    <View style={s.mapBg}>
-      {Array.from({ length: 18 }).map((_, i) => (
-        <View key={`h${i}`} style={[s.gH, { top: `${(i / 18) * 100}%` as any }]} />
-      ))}
-      {Array.from({ length: 16 }).map((_, i) => (
-        <View key={`v${i}`} style={[s.gV, { left: `${(i / 16) * 100}%` as any }]} />
-      ))}
-      {[[10,8],[22,55],[38,20],[50,70],[65,35],[78,80],[18,88],[45,48],[72,15],[88,55]].map(([t,l],i) => (
-        <View key={i} style={[s.pin, { top: `${t}%` as any, left: `${l}%` as any }]}>
-          <View style={s.pinR} /><View style={s.pinD} />
-        </View>
-      ))}
-      <View style={s.frost} />
-    </View>
-  );
-}
 
 // ══════════════════════════════════════════════════════════════
 // AI CHATBOT

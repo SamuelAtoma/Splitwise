@@ -4,6 +4,7 @@ import {
   ScrollView, Platform, ActivityIndicator,
 } from 'react-native';
 import { supabase, Profile } from '../lib/supabase';
+import { MapBg } from '../lib/utils';
 
 const TEAL = '#17B8B8';
 const TEAL_DARK = '#0D8F8F';
@@ -13,25 +14,6 @@ const DARK = '#062020';
 const MID = '#3A7070';
 const BG = '#F8FEFE';
 const LIGHT_BORDER = '#C8E8E8';
-
-function MapBg() {
-  return (
-    <View style={s.mapBg}>
-      {Array.from({ length: 18 }).map((_, i) => (
-        <View key={`h${i}`} style={[s.gH, { top: `${(i / 18) * 100}%` as any }]} />
-      ))}
-      {Array.from({ length: 16 }).map((_, i) => (
-        <View key={`v${i}`} style={[s.gV, { left: `${(i / 16) * 100}%` as any }]} />
-      ))}
-      {[[10,8],[22,55],[38,20],[50,70],[65,35],[78,80],[18,88],[45,48],[72,15],[88,55]].map(([t,l],i) => (
-        <View key={i} style={[s.pin, { top: `${t}%` as any, left: `${l}%` as any }]}>
-          <View style={s.pinR} /><View style={s.pinD} />
-        </View>
-      ))}
-      <View style={s.frost} />
-    </View>
-  );
-}
 
 interface Props { onSignOut: () => void; }
 

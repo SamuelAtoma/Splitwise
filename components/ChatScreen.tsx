@@ -4,6 +4,8 @@ import {
   TextInput, ActivityIndicator, Platform, KeyboardAvoidingView,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { MapBg } from '../lib/utils';
+import { Svg, Icons } from '../lib/icons';
 
 const TEAL       = '#17B8B8';
 const TEAL_DARK  = '#0D8F8F';
@@ -13,33 +15,6 @@ const DARK       = '#062020';
 const MID        = '#3A7070';
 const LIGHT_BORDER = '#C8E8E8';
 const BG         = '#F8FEFE';
-
-// ── SVG Icons ────────────────────────────────────────────────
-function Svg({ size=24, stroke=DARK, fill='none', children }: any) {
-  if (Platform.OS !== 'web') return null;
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24"
-      fill={fill} stroke={stroke} strokeWidth="1.8"
-      strokeLinecap="round" strokeLinejoin="round"
-      style={{ display:'block' }}>
-      {children}
-    </svg>
-  ) as any;
-}
-
-const Icons = {
-  chat:   (s:string,sz=20) => <Svg size={sz} stroke={s}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></Svg>,
-  send:   (s:string,sz=18) => <Svg size={sz} stroke={s} fill={s}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></Svg>,
-  back:   (s:string,sz=20) => <Svg size={sz} stroke={s}><polyline points="15 18 9 12 15 6"/></Svg>,
-  users:  (s:string,sz=20) => <Svg size={sz} stroke={s}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></Svg>,
-  cart:   (s:string,sz=20) => <Svg size={sz} stroke={s}><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></Svg>,
-  globe:  (s:string,sz=20) => <Svg size={sz} stroke={s}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></Svg>,
-  lock:   (s:string,sz=20) => <Svg size={sz} stroke={s}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></Svg>,
-  attach: (s:string,sz=20) => <Svg size={sz} stroke={s}><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></Svg>,
-  image:  (s:string,sz=20) => <Svg size={sz} stroke={s}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></Svg>,
-  file:   (s:string,sz=20) => <Svg size={sz} stroke={s}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></Svg>,
-  video:  (s:string,sz=20) => <Svg size={sz} stroke={s}><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></Svg>,
-};
 
 interface Message {
   id: string;
@@ -63,18 +38,6 @@ interface Group {
   is_pool: boolean;
   created_by: string;
   member_count?: number;
-}
-
-// ── Map Background ───────────────────────────────────────────
-function MapBg() {
-  return (
-    <View style={s.mapBg}>
-      {Array.from({length:18}).map((_,i)=>(
-        <View key={`h${i}`} style={[s.gH,{top:`${(i/18)*100}%` as any}]}/>
-      ))}
-      <View style={s.frost}/>
-    </View>
-  );
 }
 
 // ── Message Bubble ───────────────────────────────────────────
@@ -135,7 +98,7 @@ function MessageBubble({ msg, isMe, showAvatar }: {
             style={s.fileAttach}
             onPress={() => { if (Platform.OS === 'web') window.open(msg.file_url, '_blank'); }}
           >
-            <View style={s.fileAttachIcon}>{Icons.file(TEAL_DARK, 18)}</View>
+            <View style={s.fileAttachIcon}>{(Icons as any).file(TEAL_DARK, 18)}</View>
             <View style={{flex:1}}>
               <Text style={s.fileAttachName} numberOfLines={1}>{msg.file_name || 'File'}</Text>
               {msg.file_size ? <Text style={s.fileAttachSize}>{(msg.file_size/1024).toFixed(1)} KB</Text> : null}

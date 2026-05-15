@@ -6,6 +6,10 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { supabase } from '../lib/supabase';
+import { distanceKm, createCircle, avatarHtml } from '../lib/utils';
+import {
+  Svg, CartIcon, PinIcon, ChevronIcon, RecenterIcon, SignalIcon, LocationIcon, ShieldIcon,
+} from '../lib/icons';
 
 const TEAL       = '#17B8B8';
 const TEAL_DARK  = '#0D8F8F';
@@ -23,104 +27,38 @@ interface MapUser {
   market_name: string; is_pooling: boolean;
   profile: { first_name: string; last_name: string; avatar_emoji: string; };
 }
-
-function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-function createCircle(lat: number, lng: number, radiusKm: number): any {
-  const points = 64;
-  const coords: number[][] = [];
-  for (let i = 0; i <= points; i++) {
-    const angle = (i / points) * 2 * Math.PI;
-    const dx = radiusKm / (111.32 * Math.cos(lat * Math.PI / 180));
-    const dy = radiusKm / 110.574;
-    coords.push([lng + dx * Math.cos(angle), lat + dy * Math.sin(angle)]);
-  }
-  return { type:'Feature', properties:{}, geometry:{ type:'Polygon', coordinates:[coords] } };
-}
-
-// ── SVG Icons ────────────────────────────────────────────────
-function SvgIcon({ size=24, stroke=DARK, fill='none', children, style }: {
-  size?: number; stroke?: string; fill?: string; children: any; style?: any;
-}) {
-  if (Platform.OS !== 'web') return null;
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24"
-      fill={fill} stroke={stroke} strokeWidth="1.8"
-      strokeLinecap="round" strokeLinejoin="round"
-      style={{ display:'block', ...style }}>
-      {children}
-    </svg>
-  ) as any;
-}
-
-const CartIcon     = ({ s, sz=20 }: { s:string; sz?:number }) => (
-  <SvgIcon size={sz} stroke={s}>
-    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-    <line x1="3" y1="6" x2="21" y2="6"/>
-    <path d="M16 10a4 4 0 01-8 0"/>
-  </SvgIcon>
-);
-const PinIcon      = ({ s, sz=20 }: { s:string; sz?:number }) => (
-  <SvgIcon size={sz} stroke={s}>
-    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-    <circle cx="12" cy="9" r="2.5"/>
-  </SvgIcon>
-);
-const ChevronIcon  = ({ s, sz=18 }: { s:string; sz?:number }) => (
-  <SvgIcon size={sz} stroke={s}><polyline points="6 9 12 15 18 9"/></SvgIcon>
-);
-const RecenterIcon = ({ s, sz=20 }: { s:string; sz?:number }) => (
-  <SvgIcon size={sz} stroke={s}>
-    <circle cx="12" cy="12" r="3"/>
-    <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
-  </SvgIcon>
-);
-const SignalIcon   = ({ s, sz=16 }: { s:string; sz?:number }) => (
-  <SvgIcon size={sz} stroke={s}>
-    <path d="M1.5 8.5a11 11 0 0121 0"/>
-    <path d="M5 12a7 7 0 0114 0"/>
-    <path d="M8.5 15.5a3.5 3.5 0 017 0"/>
-    <circle cx="12" cy="19" r="1" fill={s} stroke="none"/>
-  </SvgIcon>
-);
-const ChatIcon     = ({ s, sz=20 }: { s:string; sz?:number }) => (
-  <SvgIcon size={sz} stroke={s}>
-    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-  </SvgIcon>
-);
-const UsersIcon    = ({ s, sz=20 }: { s:string; sz?:number }) => (
-  <SvgIcon size={sz} stroke={s}>
-    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-    <circle cx="9" cy="7" r="4"/>
     <path d="M23 21v-2a4 4 0 00-3-3.87"/>
     <path d="M16 3.13a4 4 0 010 7.75"/>
   </SvgIcon>
 );
 const LocationIcon = ({ s, sz=20 }: { s:string; sz?:number }) => (
-  <SvgIcon size={sz} stroke={s}>
-    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-    <circle cx="12" cy="9" r="3"/>
-  </SvgIcon>
 );
-const ShieldIcon   = ({ s, sz=20 }: { s:string; sz?:number }) => (
-  <SvgIcon size={sz} stroke={s}>
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-  </SvgIcon>
+const ChevronIcon  = ({ s, sz=18 }: { s:string; sz?:number }) => (
+  <Svg size={sz} stroke={s}><polyline points="6 9 12 15 18 9"/></Svg>
 );
-
-// ── Avatar HTML helper — image if URL, emoji if short, initials fallback ──
-const avatarHtml = (avatarEmoji: string, size = 52) =>
-  avatarEmoji?.startsWith('http')
-    ? `<img src="${avatarEmoji}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;display:block;" />`
-    : avatarEmoji
-      ? `<span style="font-size:${Math.round(size * 0.46)}px;line-height:1;">${avatarEmoji}</span>`
-      : '';
+const RecenterIcon = ({ s, sz=20 }: { s:string; sz?:number }) => (
+  <Svg size={sz} stroke={s}>
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+  </Svg>
+);
+const SignalIcon   = ({ s, sz=16 }: { s:string; sz?:number }) => (
+  <Svg size={sz} stroke={s}>
+    <path d="M1.5 8.5a11 11 0 0121 0"/>
+    <path d="M5 12a7 7 0 0114 0"/>
+    <path d="M8.5 15.5a3.5 3.5 0 017 0"/>
+    <circle cx="12" cy="19" r="1" fill={s} stroke="none"/>
+  </Svg>
+);
+const ChatIcon     = ({ s, sz=20 }: { s:string; sz?:number }) => (
+  <Svg size={sz} stroke={s}>
+    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+  </Svg>
+);
+const UsersIcon    = ({ s, sz=20 }: { s:string; sz?:number }) => (
+  <Svg size={sz} stroke={s}>
+    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+    <circle cx="9" cy="7" r="4"/>
 
 // ── Web map markers (SVG strings for HTML injection) ─────────
 const svgPin = (color: string) => `
