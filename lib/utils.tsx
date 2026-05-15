@@ -56,53 +56,36 @@ const PIN_DOT = '#0D8F8F';
 const mapBgStyles = {
   mapBg: {
     position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    top: 0, left: 0, right: 0, bottom: 0,
     zIndex: -1,
   },
   gH: {
     position: 'absolute' as const,
-    left: 0,
-    right: 0,
-    height: 1,
+    left: 0, right: 0, height: 1,
     backgroundColor: LIGHT_BORDER,
   },
   gV: {
     position: 'absolute' as const,
-    top: 0,
-    bottom: 0,
-    width: 1,
+    top: 0, bottom: 0, width: 1,
     backgroundColor: LIGHT_BORDER,
   },
   pin: {
     position: 'absolute' as const,
-    width: 20,
-    height: 20,
+    width: 20, height: 20,
     transform: 'translate(-10px, -10px)',
   },
   pinR: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 20, height: 20, borderRadius: 10,
     backgroundColor: PIN_OUTER,
   },
   pinD: {
     position: 'absolute' as const,
-    top: 8,
-    left: 8,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    top: 8, left: 8, width: 4, height: 4, borderRadius: 2,
     backgroundColor: PIN_DOT,
   },
   frost: {
     position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(255,255,255,0.4)',
   },
 };
@@ -117,16 +100,8 @@ export function MapBg() {
         <View key={`v${i}`} style={[mapBgStyles.gV, { left: `${(i / 16) * 100}%` as any }]} />
       ))}
       {[
-        [10, 8],
-        [22, 55],
-        [38, 20],
-        [50, 70],
-        [65, 35],
-        [78, 80],
-        [18, 88],
-        [45, 48],
-        [72, 15],
-        [88, 55],
+        [10, 8], [22, 55], [38, 20], [50, 70], [65, 35],
+        [78, 80], [18, 88], [45, 48], [72, 15], [88, 55],
       ].map(([t, l], i) => (
         <View key={i} style={[mapBgStyles.pin, { top: `${t}%` as any, left: `${l}%` as any }]}>
           <View style={mapBgStyles.pinR} />

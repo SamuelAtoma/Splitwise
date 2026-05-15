@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { distanceKm, createCircle, avatarHtml } from '../lib/utils';
 import {
   Svg, CartIcon, PinIcon, ChevronIcon, RecenterIcon, SignalIcon, LocationIcon, ShieldIcon,
+  ChatIcon, UsersIcon,
 } from '../lib/icons';
 
 const TEAL       = '#17B8B8';
@@ -27,38 +28,6 @@ interface MapUser {
   market_name: string; is_pooling: boolean;
   profile: { first_name: string; last_name: string; avatar_emoji: string; };
 }
-    <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-    <path d="M16 3.13a4 4 0 010 7.75"/>
-  </SvgIcon>
-);
-const LocationIcon = ({ s, sz=20 }: { s:string; sz?:number }) => (
-);
-const ChevronIcon  = ({ s, sz=18 }: { s:string; sz?:number }) => (
-  <Svg size={sz} stroke={s}><polyline points="6 9 12 15 18 9"/></Svg>
-);
-const RecenterIcon = ({ s, sz=20 }: { s:string; sz?:number }) => (
-  <Svg size={sz} stroke={s}>
-    <circle cx="12" cy="12" r="3"/>
-    <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
-  </Svg>
-);
-const SignalIcon   = ({ s, sz=16 }: { s:string; sz?:number }) => (
-  <Svg size={sz} stroke={s}>
-    <path d="M1.5 8.5a11 11 0 0121 0"/>
-    <path d="M5 12a7 7 0 0114 0"/>
-    <path d="M8.5 15.5a3.5 3.5 0 017 0"/>
-    <circle cx="12" cy="19" r="1" fill={s} stroke="none"/>
-  </Svg>
-);
-const ChatIcon     = ({ s, sz=20 }: { s:string; sz?:number }) => (
-  <Svg size={sz} stroke={s}>
-    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-  </Svg>
-);
-const UsersIcon    = ({ s, sz=20 }: { s:string; sz?:number }) => (
-  <Svg size={sz} stroke={s}>
-    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-    <circle cx="9" cy="7" r="4"/>
 
 // ── Web map markers (SVG strings for HTML injection) ─────────
 const svgPin = (color: string) => `

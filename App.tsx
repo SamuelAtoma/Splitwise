@@ -2,6 +2,8 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, ActivityIndicator, Text, Platform } from 'react-native';
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
+import { initSentry, setUserContext, clearUserContext, captureError } from './lib/sentry';
+import ErrorBoundary from './components/ErrorBoundary';
 import LandingPage from './components/LandingPage';
 import Onboarding from './components/Onboarding';
 import AuthScreen from './components/AuthScreen';
@@ -14,13 +16,15 @@ const TEAL_DARK = '#0D8F8F';
 
 type Screen = 'loading' | 'landing' | 'onboarding' | 'signup' | 'signin' | 'profile_setup' | 'dashboard' | 'privacy' | 'terms';
 
-// Screens that should be pushed into browser history
 const HISTORY_SCREENS: Screen[] = ['landing', 'onboarding', 'signup', 'signin', 'profile_setup', 'dashboard', 'privacy', 'terms'];
 
-export default function App() {
-  const [screen, setScreen] = useState<Screen>('loading');
+// Initialise Sentry as early as possible (non-blocking)
+initSentry().catch(() => {});
 
-  // Navigate and push browser history on web
+function AppContent() {
+  const [screen, setScreen] = useState<Screen>('loading');
+  const [initError, setInitError] = useState<string | null>(null);
+
   const navigate = (next: Screen) => {
     setScreen(next);
     if (Platform.OS === 'web' && HISTORY_SCREENS.includes(next)) {
@@ -28,7 +32,6 @@ export default function App() {
     }
   };
 
-  // Listen to browser back/forward buttons
   useEffect(() => {
     if (Platform.OS !== 'web') return;
     const onPop = (e: PopStateEvent) => {
@@ -40,28 +43,63 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        checkProfileSetup(session.user.id);
-      } else {
+    let mounted = true;
+
+    const bootstrap = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (!mounted) return;
+        if (session) {
+          setUserContext(session.user.id, session.user.email);
+          await checkProfileSetup(session.user.id);
+        } else {
+          navigate('landing');
+        }
+      } catch (err: any) {
+        if (!mounted) return;
+        captureError(err, { context: 'bootstrap' });
+        console.error('[App] Session init failed:', err);
+        // Don't block the user — send them to landing so they can still use the app
         navigate('landing');
       }
-    });
+    };
+
+    bootstrap();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) checkProfileSetup(session.user.id);
+      if (!mounted) return;
+      if (session) {
+        setUserContext(session.user.id, session.user.email);
+        checkProfileSetup(session.user.id);
+      } else {
+        clearUserContext();
+      }
     });
-    return () => subscription.unsubscribe();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const checkProfileSetup = async (userId: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('display_name')
-      .eq('id', userId)
-      .maybeSingle();
-    if (data?.display_name) {
-      navigate('dashboard');
-    } else {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', userId)
+        .maybeSingle();
+      if (error) throw error;
+      if (data?.display_name) {
+        navigate('dashboard');
+      } else {
+        navigate('profile_setup');
+      }
+    } catch (err: any) {
+      captureError(err, { context: 'checkProfileSetup', userId });
+      console.error('[App] Profile check failed:', err);
+      // Fail open — send to profile_setup so user can complete their profile
       navigate('profile_setup');
     }
   };
@@ -72,6 +110,7 @@ export default function App() {
         <StatusBar style="dark" />
         <ActivityIndicator size="large" color={TEAL_DARK} />
         <Text style={s.loadingTxt}>SPLITWI$E</Text>
+        {initError && <Text style={s.errorTxt}>{initError}</Text>}
       </View>
     );
   }
@@ -113,7 +152,7 @@ export default function App() {
         />
       )}
       {screen === 'dashboard' && (
-        <DrawerNavigator onSignOut={() => navigate('landing')} onEditProfile={() => navigate('profile_setup')} />
+        <DrawerNavigator onSignOut={() => { clearUserContext(); navigate('landing'); }} onEditProfile={() => navigate('profile_setup')} />
       )}
       {screen === 'privacy' && (
         <PrivacyPolicy onBack={() => navigate('landing')} />
@@ -125,8 +164,17 @@ export default function App() {
   );
 }
 
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
+  );
+}
+
 const s = StyleSheet.create({
   root:       { flex: 1 },
   loading:    { flex: 1, backgroundColor: '#F8FEFE', alignItems: 'center', justifyContent: 'center', gap: 16 },
   loadingTxt: { fontSize: 22, fontWeight: '900', color: '#0A6E6E', letterSpacing: 1.5 },
+  errorTxt:   { fontSize: 13, color: '#E53E3E', textAlign: 'center', paddingHorizontal: 24 },
 });

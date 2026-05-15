@@ -186,7 +186,7 @@ const s = StyleSheet.create({
   content:     { paddingBottom: 60 },
 
   // Hero
-  hero:        { background: `linear-gradient(135deg, ${TEAL_DEEP}, ${TEAL_DARK})` as any, backgroundColor: TEAL_DEEP, paddingVertical: 56, paddingHorizontal: 24, alignItems: 'center', gap: 14 },
+  hero:        { backgroundColor: TEAL_DEEP, paddingVertical: 56, paddingHorizontal: 24, alignItems: 'center', gap: 14 } as any,
   heroIcon:    { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   heroTitle:   { fontSize: 30, fontWeight: '800', color: WHITE, textAlign: 'center' },
   heroSub:     { fontSize: 15, color: 'rgba(255,255,255,0.8)', textAlign: 'center', lineHeight: 24, maxWidth: 420 },

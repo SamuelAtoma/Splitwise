@@ -3,6 +3,7 @@
     "strict": true,
     "jsx": "react-native",
     "lib": ["ESNext", "DOM"],
+    "module": "ESNext",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "noEmit": true,
