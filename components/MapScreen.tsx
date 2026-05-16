@@ -19,7 +19,7 @@ const WHITE      = '#FFFFFF';
 const DARK       = '#062020';
 const MID        = '#3A7070';
 const LIGHT_BORDER = '#C8E8E8';
-const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN!;
+const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN || '';
 const { width: SW, height: SH } = Dimensions.get('window');
 
 interface Market { id: string; name: string; logo_emoji: string; is_custom: boolean; }
@@ -56,6 +56,7 @@ function WebMap({ location, mapUsers, radius, onUserTap, myProfile, selectedMark
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
+    if (!MAPBOX_TOKEN) return; // token not yet configured — show fallback UI
     const initMap = async () => {
       try {
       const mapboxgl = (await import('mapbox-gl')).default;
