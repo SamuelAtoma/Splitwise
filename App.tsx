@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, ActivityIndicator, Text, Platform } from 'react-native';
 import { useState, useEffect } from 'react';
-import { supabase } from './lib/supabase';
+import { supabase, supabaseMisconfigured } from './lib/supabase';
 import { initSentry, setUserContext, clearUserContext, captureError } from './lib/sentry';
 import ErrorBoundary from './components/ErrorBoundary';
 import LandingPage from './components/LandingPage';
@@ -46,6 +46,11 @@ function AppContent() {
     let mounted = true;
 
     const bootstrap = async () => {
+      // If env vars are missing (mis-deploy), drop straight to landing — don't crash.
+      if (supabaseMisconfigured) {
+        navigate('landing');
+        return;
+      }
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
