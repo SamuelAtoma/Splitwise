@@ -252,8 +252,9 @@ function BottomTabBar({ active, onPress }: {
 // ══════════════════════════════════════════════════════════════════
 // HOME SCREEN
 // ══════════════════════════════════════════════════════════════════
-function HomeScreen({ profile, onNavigate }: {
+function HomeScreen({ profile, onNavigate, openGroups, matchBanner, onDismissBanner }: {
   profile: any | null; email: string; onNavigate: (s: ScreenName) => void;
+  openGroups: any[]; matchBanner: boolean; onDismissBanner: () => void;
 }) {
   const [delivery, setDelivery] = useState(2000);
   const [people,   setPeople]   = useState(4);
@@ -312,6 +313,31 @@ function HomeScreen({ profile, onNavigate }: {
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={hs.scroll} showsVerticalScrollIndicator={false}>
+
+      {/* ── Match notification banner ─────────────────────── */}
+      {matchBanner && openGroups.length > 0 && (
+        <View style={hs.matchBanner}>
+          <View style={hs.matchBannerLeft}>
+            <View style={hs.matchBannerDot}/>
+            <View style={{ flex: 1 }}>
+              <Text style={hs.matchBannerTitle}>
+                🔥 {openGroups.length} open pool{openGroups.length !== 1 ? 's' : ''} near you!
+              </Text>
+              <Text style={hs.matchBannerSub}>
+                {openGroups[0]?.market_name} · {openGroups[0]?.name}
+              </Text>
+            </View>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            <TouchableOpacity style={hs.matchBannerJoin} onPress={() => onNavigate('Groups')}>
+              <Text style={hs.matchBannerJoinTxt}>View →</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={hs.matchBannerClose} onPress={onDismissBanner}>
+              {Icons.close(MID, 14)}
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {/* ── Hero ─────────────────────────────────────────────── */}
       <View style={hs.hero}>
@@ -435,6 +461,51 @@ function HomeScreen({ profile, onNavigate }: {
         </TouchableOpacity>
       </View>
 
+      {/* ── Deals Near You ───────────────────────────────────── */}
+      {openGroups.length > 0 && (
+        <View style={hs.dealsSection}>
+          <View style={hs.dealsSectionHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={hs.dealsSectionTitle}>🔥 Deals Near You</Text>
+              <Text style={hs.dealsSectionSub}>Open pools you can join right now</Text>
+            </View>
+            <TouchableOpacity style={hs.dealsViewAll} onPress={() => onNavigate('Groups')}>
+              <Text style={hs.dealsViewAllTxt}>View all</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 12, paddingRight: 16 }}>
+            {openGroups.map((g: any) => {
+              const diff = g.expires_at ? new Date(g.expires_at).getTime() - Date.now() : null;
+              const hrs   = diff ? Math.floor(diff / 3600000) : null;
+              const mins  = diff ? Math.floor((diff % 3600000) / 60000) : null;
+              const timeLabel = diff === null ? '' : hrs! > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+              return (
+                <TouchableOpacity key={g.id} style={hs.dealCard} onPress={() => onNavigate('Groups')} activeOpacity={0.8}>
+                  <View style={hs.dealCardTop}>
+                    <Text style={hs.dealCardMarket}>{g.market_name}</Text>
+                    {timeLabel ? (
+                      <View style={hs.dealTimePill}>
+                        <Text style={hs.dealTimeTxt}>⏱ {timeLabel}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text style={hs.dealCardName} numberOfLines={1}>{g.name}</Text>
+                  <View style={hs.dealCardMeta}>
+                    <Text style={hs.dealCardMembers}>
+                      👥 {g.member_count || 0}{g.max_members ? `/${g.max_members}` : ''} members
+                    </Text>
+                  </View>
+                  <View style={hs.dealCardJoinBtn}>
+                    <Text style={hs.dealCardJoinTxt}>Join Pool →</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+
       <View style={{ height: 32 }} />
     </ScrollView>
   );
@@ -443,12 +514,14 @@ function HomeScreen({ profile, onNavigate }: {
 // ══════════════════════════════════════════════════════════════════
 // PROFILE SCREEN
 // ══════════════════════════════════════════════════════════════════
-function ProfileScreen({ profile, email, onSignOut, onEditProfile, onNavigateFCCPC }: {
+function ProfileScreen({ profile, email, onSignOut, onEditProfile, onNavigateFCCPC, splitsCompleted, orderHistory }: {
   profile: any | null;
   email: string;
   onSignOut: () => void;
   onEditProfile?: () => void;
   onNavigateFCCPC?: () => void;
+  splitsCompleted: number;
+  orderHistory: any[];
 }) {
   const getInitials = () => {
     if (!profile) return '??';
@@ -536,6 +609,72 @@ function ProfileScreen({ profile, email, onSignOut, onEditProfile, onNavigateFCC
         ))}
       </View>
 
+      {/* ── Reputation / Completion Score ─────────────────── */}
+      <View style={s.reputCard}>
+        <Text style={s.reputTitle}>Shopper Reputation</Text>
+        <View style={s.reputRow}>
+          <View style={s.reputItem}>
+            <Text style={s.reputNum}>{splitsCompleted}</Text>
+            <Text style={s.reputLbl}>Splits Done</Text>
+          </View>
+          <View style={s.reputDivider}/>
+          <View style={s.reputItem}>
+            <Text style={[s.reputNum, { color: '#B45309' }]}>{orderHistory.length}</Text>
+            <Text style={s.reputLbl}>Groups Joined</Text>
+          </View>
+          <View style={s.reputDivider}/>
+          <View style={s.reputItem}>
+            <View style={s.reputStars}>
+              {[1,2,3,4,5].map(i => {
+                const filled = i <= Math.min(5, Math.floor(splitsCompleted / 2) + 1);
+                return (
+                  <Text key={i} style={{ fontSize: 14, color: filled ? '#F59E0B' : '#D1D5DB' }}>★</Text>
+                );
+              })}
+            </View>
+            <Text style={s.reputLbl}>Score</Text>
+          </View>
+        </View>
+        {splitsCompleted === 0 && (
+          <Text style={s.reputHint}>Complete your first split to build your reputation! 🚀</Text>
+        )}
+        {splitsCompleted >= 5 && splitsCompleted < 20 && (
+          <View style={s.reputBadge}><Text style={s.reputBadgeTxt}>🏅 Trusted Splitter</Text></View>
+        )}
+        {splitsCompleted >= 20 && (
+          <View style={[s.reputBadge, { backgroundColor: '#FEF3C7', borderColor: '#F59E0B55' }]}>
+            <Text style={[s.reputBadgeTxt, { color: '#92400E' }]}>🏆 Power Splitter</Text>
+          </View>
+        )}
+      </View>
+
+      {/* ── Order History ────────────────────────────────────── */}
+      {orderHistory.length > 0 && (
+        <View style={s.historyCard}>
+          <Text style={s.infoCardTitle}>Order History</Text>
+          {orderHistory.slice(0, 5).map((g: any, i: number) => (
+            <View key={g.id || i}>
+              <View style={s.historyRow}>
+                <View style={[s.historyIcon, g.is_pool && { backgroundColor: '#F0FFF4' }]}>
+                  <Text style={{ fontSize: 14 }}>{g.is_pool ? '🔗' : '🔒'}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.historyName} numberOfLines={1}>{g.name}</Text>
+                  <Text style={s.historyMeta}>{g.market_name} · {g.member_count || 0} members</Text>
+                </View>
+                <Text style={s.historyDate}>
+                  {new Date(g.created_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}
+                </Text>
+              </View>
+              {i < Math.min(orderHistory.length, 5) - 1 && <View style={s.divider}/>}
+            </View>
+          ))}
+          {orderHistory.length > 5 && (
+            <Text style={s.historyMore}>+{orderHistory.length - 5} more groups</Text>
+          )}
+        </View>
+      )}
+
       {/* FCCPC / Report a Scam */}
       {onNavigateFCCPC && (
         <TouchableOpacity style={s.fccpcCard} onPress={onNavigateFCCPC} activeOpacity={0.8}>
@@ -572,9 +711,27 @@ export default function DrawerNavigator({ onSignOut, onEditProfile }: DrawerProp
   const [email,         setEmail]         = useState('');
   const [activeChatId,  setActiveChatId]  = useState<string|undefined>(undefined);
   const [botOpen,       setBotOpen]       = useState(false);
+  const [openGroups,    setOpenGroups]    = useState<any[]>([]);
+  const [orderHistory,  setOrderHistory]  = useState<any[]>([]);
+  const [matchBanner,   setMatchBanner]   = useState(false);
+  const [bannerSeen,    setBannerSeen]    = useState(false);
   const botAnim = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => { loadProfile(); }, []);
+  useEffect(() => {
+    loadProfile();
+    // Realtime: watch for new open groups
+    const channel = supabase
+      .channel('open-groups-watch')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'groups' }, (payload) => {
+        const g = payload.new as any;
+        if (g?.is_pool) {
+          setOpenGroups(prev => [g, ...prev.slice(0, 9)]);
+          if (!bannerSeen) setMatchBanner(true);
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const loadProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -582,6 +739,46 @@ export default function DrawerNavigator({ onSignOut, onEditProfile }: DrawerProp
     setEmail(user.email || '');
     const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
     if (data) setProfile(data);
+    await fetchOpenGroups();
+    await fetchOrderHistory(user.id);
+  };
+
+  const fetchOpenGroups = async () => {
+    try {
+      const { data } = await supabase
+        .from('groups')
+        .select('*, group_members(count)')
+        .eq('is_pool', true)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      const now = Date.now();
+      const active = (data || []).filter((g: any) => {
+        if (!g.expires_at) return true;
+        return new Date(g.expires_at).getTime() > now;
+      }).map((g: any) => ({
+        ...g,
+        member_count: g.group_members?.[0]?.count || 0,
+      }));
+      setOpenGroups(active);
+      if (active.length > 0 && !bannerSeen) setMatchBanner(true);
+    } catch { /* silent */ }
+  };
+
+  const fetchOrderHistory = async (userId: string) => {
+    try {
+      const { data: memberRows } = await supabase
+        .from('group_members')
+        .select('group_id')
+        .eq('user_id', userId);
+      if (!memberRows || memberRows.length === 0) return;
+      const groupIds = memberRows.map((r: any) => r.group_id);
+      const { data: groups } = await supabase
+        .from('groups')
+        .select('id, name, market_name, is_pool, created_at, member_count')
+        .in('id', groupIds)
+        .order('created_at', { ascending: false });
+      if (groups) setOrderHistory(groups);
+    } catch { /* silent */ }
   };
 
   const navigate = (screen: ScreenName) => {
@@ -656,7 +853,14 @@ export default function DrawerNavigator({ onSignOut, onEditProfile }: DrawerProp
       {/* ── Screen content ─────────────────────────────────── */}
       <View style={s.screenContent}>
         {activeScreen === 'Home' && (
-          <HomeScreen profile={profile} email={email} onNavigate={navigate} />
+          <HomeScreen
+            profile={profile}
+            email={email}
+            onNavigate={navigate}
+            openGroups={openGroups}
+            matchBanner={matchBanner}
+            onDismissBanner={() => { setMatchBanner(false); setBannerSeen(true); }}
+          />
         )}
         {activeScreen === 'Map' && (
           <MapScreenComponent onOpenChat={handleOpenChat} />
@@ -674,6 +878,8 @@ export default function DrawerNavigator({ onSignOut, onEditProfile }: DrawerProp
             onSignOut={handleSignOut}
             onEditProfile={onEditProfile}
             onNavigateFCCPC={() => navigate('FCCPC')}
+            splitsCompleted={profile?.splits_completed || 0}
+            orderHistory={orderHistory}
           />
         )}
         {activeScreen === 'FCCPC' && <FCCPCScreen />}
@@ -774,6 +980,28 @@ const s = StyleSheet.create({
 
   signOutBtn: { marginHorizontal:16,marginBottom:32,paddingVertical:15,borderRadius:12,borderWidth:1.5,borderColor:LIGHT_BORDER,alignItems:'center',backgroundColor:WHITE },
   signOutTxt: { color:MID,fontSize:15,fontWeight:'700' },
+
+  // Reputation card
+  reputCard:    { marginHorizontal:16,marginBottom:14,backgroundColor:WHITE,borderRadius:16,padding:18,borderWidth:1,borderColor:LIGHT_BORDER,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:2 },
+  reputTitle:   { fontSize:14,fontWeight:'800',color:DARK,marginBottom:14 },
+  reputRow:     { flexDirection:'row',alignItems:'center',justifyContent:'space-around',marginBottom:12 },
+  reputItem:    { alignItems:'center',gap:4 },
+  reputNum:     { fontSize:26,fontWeight:'900',color:TEAL_DEEP },
+  reputLbl:     { fontSize:10,color:MID,fontWeight:'500' },
+  reputDivider: { width:1,height:40,backgroundColor:LIGHT_BORDER },
+  reputStars:   { flexDirection:'row',gap:1 },
+  reputHint:    { fontSize:11,color:MID,textAlign:'center',marginTop:4,fontStyle:'italic' },
+  reputBadge:   { marginTop:10,alignSelf:'center',paddingHorizontal:16,paddingVertical:6,borderRadius:20,backgroundColor:'#F0FFF4',borderWidth:1,borderColor:'#68D39155' },
+  reputBadgeTxt:{ fontSize:12,fontWeight:'800',color:'#276749' },
+
+  // Order history card
+  historyCard:  { marginHorizontal:16,marginBottom:14,backgroundColor:WHITE,borderRadius:16,padding:18,borderWidth:1,borderColor:LIGHT_BORDER,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:2 },
+  historyRow:   { flexDirection:'row',alignItems:'center',gap:12,paddingVertical:10 },
+  historyIcon:  { width:36,height:36,borderRadius:10,backgroundColor:TEAL+'10',alignItems:'center',justifyContent:'center' },
+  historyName:  { fontSize:13,fontWeight:'700',color:DARK,marginBottom:2 },
+  historyMeta:  { fontSize:11,color:MID,fontWeight:'500' },
+  historyDate:  { fontSize:11,color:MID },
+  historyMore:  { textAlign:'center',color:MID,fontSize:12,marginTop:10,fontWeight:'600' },
 
   // AI chatbot FAB + window
   botFab:         { position:'absolute',bottom:84,right:20,zIndex:50,shadowColor:TEAL_DARK,shadowOffset:{width:0,height:6},shadowOpacity:0.35,shadowRadius:16,elevation:12 },
@@ -929,6 +1157,34 @@ const hs = StyleSheet.create({
 
   calcCta:    { marginTop: 14, backgroundColor: TEAL_DARK, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   calcCtaTxt: { color: WHITE, fontWeight: '800', fontSize: 14 },
+
+  // Match notification banner
+  matchBanner:      { marginHorizontal:16,marginTop:16,marginBottom:4,backgroundColor:TEAL_DEEP,borderRadius:14,padding:14,flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:10,shadowColor:TEAL_DEEP,shadowOffset:{width:0,height:4},shadowOpacity:0.25,shadowRadius:10,elevation:6 },
+  matchBannerLeft:  { flex:1,flexDirection:'row',alignItems:'center',gap:10 },
+  matchBannerDot:   { width:8,height:8,borderRadius:4,backgroundColor:'#4ADE80' },
+  matchBannerTitle: { fontSize:13,fontWeight:'800',color:WHITE,marginBottom:2 },
+  matchBannerSub:   { fontSize:11,color:WHITE+'BB' },
+  matchBannerJoin:  { paddingHorizontal:12,paddingVertical:7,borderRadius:10,backgroundColor:WHITE+'22',borderWidth:1,borderColor:WHITE+'33' },
+  matchBannerJoinTxt:{ fontSize:12,fontWeight:'800',color:WHITE },
+  matchBannerClose: { width:28,height:28,borderRadius:14,backgroundColor:WHITE+'18',alignItems:'center',justifyContent:'center' },
+
+  // Deals Near You
+  dealsSection:       { marginHorizontal:16,marginBottom:16 },
+  dealsSectionHeader: { flexDirection:'row',alignItems:'flex-end',marginBottom:14 },
+  dealsSectionTitle:  { fontSize:17,fontWeight:'900',color:DARK,marginBottom:2 },
+  dealsSectionSub:    { fontSize:12,color:MID },
+  dealsViewAll:       { paddingHorizontal:12,paddingVertical:6,borderRadius:10,backgroundColor:TEAL+'12',borderWidth:1,borderColor:TEAL+'30' },
+  dealsViewAllTxt:    { fontSize:12,fontWeight:'700',color:TEAL_DEEP },
+  dealCard:           { width:180,backgroundColor:WHITE,borderRadius:16,padding:14,borderWidth:1,borderColor:LIGHT_BORDER,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:2 },
+  dealCardTop:        { flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginBottom:6 },
+  dealCardMarket:     { fontSize:12,fontWeight:'800',color:TEAL_DEEP },
+  dealTimePill:       { paddingHorizontal:7,paddingVertical:3,borderRadius:10,backgroundColor:'#FEF3C7',borderWidth:1,borderColor:'#F59E0B44' },
+  dealTimeTxt:        { fontSize:9,fontWeight:'700',color:'#92400E' },
+  dealCardName:       { fontSize:14,fontWeight:'800',color:DARK,marginBottom:6,lineHeight:18 },
+  dealCardMeta:       { marginBottom:10 },
+  dealCardMembers:    { fontSize:11,color:MID,fontWeight:'500' },
+  dealCardJoinBtn:    { backgroundColor:TEAL_DARK,borderRadius:10,paddingVertical:8,alignItems:'center' },
+  dealCardJoinTxt:    { fontSize:12,fontWeight:'800',color:WHITE },
 });
 
 // ── AI Chatbot styles ────────────────────────────────────────────

@@ -40,7 +40,41 @@ const Icons = {
   close:   (s:string,sz=18) => <Svg size={sz} stroke={s}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Svg>,
   check:   (s:string,sz=16) => <Svg size={sz} stroke={s}><polyline points="20 6 9 17 4 12"/></Svg>,
   save:    (s:string,sz=20) => <Svg size={sz} stroke={s}><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></Svg>,
+  clock:   (s:string,sz=16) => <Svg size={sz} stroke={s}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></Svg>,
+  fire:    (s:string,sz=16) => <Svg size={sz} stroke={s}><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 01-7 7 7 7 0 01-7-7c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></Svg>,
+  minus:   (s:string,sz=16) => <Svg size={sz} stroke={s}><line x1="5" y1="12" x2="19" y2="12"/></Svg>,
+  star:    (s:string,sz=16) => <Svg size={sz} stroke={s} fill={s}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></Svg>,
 };
+
+// ── Countdown hook ───────────────────────────────────────────
+function useCountdown(expiresAt?: string | null) {
+  const calcState = useCallback(() => {
+    if (!expiresAt) return { label: '', expired: false, urgency: 'none' as const };
+    const diff = new Date(expiresAt).getTime() - Date.now();
+    if (diff <= 0) return { label: 'Expired', expired: true, urgency: 'expired' as const };
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    let label = '';
+    if (h > 6) label = `${h}h ${m}m left`;
+    else if (h > 0) label = `${h}h ${m}m left`;
+    else if (m > 0) label = `${m}m ${s}s left`;
+    else label = `${s}s left`;
+    const urgency = h >= 6 ? 'low' : h >= 2 ? 'mid' : 'high';
+    return { label, expired: false, urgency: urgency as 'low' | 'mid' | 'high' };
+  }, [expiresAt]);
+
+  const [state, setState] = useState(calcState);
+
+  useEffect(() => {
+    if (!expiresAt) return;
+    setState(calcState());
+    const id = setInterval(() => setState(calcState()), 1000);
+    return () => clearInterval(id);
+  }, [expiresAt, calcState]);
+
+  return state;
+}
 
 interface Group {
   id: string;
@@ -49,6 +83,9 @@ interface Group {
   is_pool: boolean;
   created_by: string;
   created_at: string;
+  expires_at?: string | null;
+  max_members?: number | null;
+  status?: string;
   lat?: number;
   lng?: number;
   member_count?: number;
@@ -70,16 +107,26 @@ function MapBg() {
   );
 }
 
+// ── Duration picker options ──────────────────────────────────
+const DURATIONS = [
+  { label: '2h',  hours: 2  },
+  { label: '6h',  hours: 6  },
+  { label: '12h', hours: 12 },
+  { label: '24h', hours: 24 },
+];
+
 // ── Create Group Modal ───────────────────────────────────────
 function CreateGroupModal({ visible, onClose, onCreated, currentUser, profile }: {
   visible: boolean; onClose: () => void;
   onCreated: () => void; currentUser: any; profile: any;
 }) {
-  const [name,      setName]      = useState('');
-  const [market,    setMarket]    = useState('');
-  const [isPool,    setIsPool]    = useState(false);
-  const [loading,   setLoading]   = useState(false);
-  const [error,     setError]     = useState('');
+  const [name,       setName]       = useState('');
+  const [market,     setMarket]     = useState('');
+  const [isPool,     setIsPool]     = useState(false);
+  const [duration,   setDuration]   = useState(24);   // hours
+  const [maxMembers, setMaxMembers] = useState(10);
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState('');
 
   const markets = MARKET_NAMES;
 
@@ -88,11 +135,15 @@ function CreateGroupModal({ visible, onClose, onCreated, currentUser, profile }:
     if (!market.trim()) { setError('Please select or enter a market'); return; }
     setLoading(true); setError('');
     try {
+      const expiresAt = new Date(Date.now() + duration * 3600 * 1000).toISOString();
       const { data: group, error: gErr } = await supabase.from('groups').insert({
         name:        name.trim(),
         market_name: market,
         is_pool:     isPool,
         created_by:  currentUser.id,
+        expires_at:  expiresAt,
+        max_members: maxMembers,
+        status:      'open',
       }).select().single();
       if (gErr) throw gErr;
       await supabase.from('group_members').insert({
@@ -104,9 +155,9 @@ function CreateGroupModal({ visible, onClose, onCreated, currentUser, profile }:
         sender_id:   null,
         sender_name: 'SPLITWI$E',
         is_bot:      true,
-        content:     `🎉 **${group.name}** created by ${profile?.display_name || profile?.first_name}!\n\nThis group is ordering from **${market}**.\n${isPool ? '🔗 This is an open pool — others on the map can join!' : '🔒 This is a private group.'}\n\nStart coordinating your order here! 🛒`,
+        content:     `🎉 **${group.name}** created by ${profile?.display_name || profile?.first_name}!\n\nThis group is ordering from **${market}**.\n${isPool ? '🔗 This is an open pool — others on the map can join!' : '🔒 This is a private group.'}\n\n⏱ Group expires in ${duration}h · Max ${maxMembers} members\n\nStart coordinating your order here! 🛒`,
       });
-      setName(''); setMarket(''); setIsPool(false);
+      setName(''); setMarket(''); setIsPool(false); setDuration(24); setMaxMembers(10);
       onCreated();
       onClose();
     } catch (err: any) {
@@ -129,78 +180,118 @@ function CreateGroupModal({ visible, onClose, onCreated, currentUser, profile }:
             </TouchableOpacity>
           </View>
 
-          <Text style={s.fieldLabel}>Group Name</Text>
-          <TextInput
-            style={s.fieldInput}
-            placeholder="e.g. Jumia Friday Squad"
-            placeholderTextColor="#9BB8B8"
-            value={name}
-            onChangeText={setName}
-            maxLength={40}
-          />
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <Text style={s.fieldLabel}>Group Name</Text>
+            <TextInput
+              style={s.fieldInput}
+              placeholder="e.g. Jumia Friday Squad"
+              placeholderTextColor="#9BB8B8"
+              value={name}
+              onChangeText={setName}
+              maxLength={40}
+            />
 
-          <Text style={s.fieldLabel}>Market</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}
-            style={{ marginBottom: 12 }} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
-            {markets.map(m => (
-              <TouchableOpacity
-                key={m}
-                style={[s.marketChip, market === m && s.marketChipActive]}
-                onPress={() => setMarket(m)}
-              >
-                <Text style={[s.marketChipTxt, market === m && s.marketChipTxtActive]}>{m}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-          <TextInput
-            style={[s.fieldInput, { marginBottom: 16 }]}
-            placeholder="Or type a custom market..."
-            placeholderTextColor="#9BB8B8"
-            value={market}
-            onChangeText={setMarket}
-          />
+            <Text style={s.fieldLabel}>Market</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}
+              style={{ marginBottom: 12 }} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+              {markets.map(m => (
+                <TouchableOpacity
+                  key={m}
+                  style={[s.marketChip, market === m && s.marketChipActive]}
+                  onPress={() => setMarket(m)}
+                >
+                  <Text style={[s.marketChipTxt, market === m && s.marketChipTxtActive]}>{m}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TextInput
+              style={[s.fieldInput, { marginBottom: 16 }]}
+              placeholder="Or type a custom market..."
+              placeholderTextColor="#9BB8B8"
+              value={market}
+              onChangeText={setMarket}
+            />
 
-          <Text style={s.fieldLabel}>Group Type</Text>
-          <View style={s.typeRow}>
-            <TouchableOpacity
-              style={[s.typeCard, !isPool && s.typeCardActive]}
-              onPress={() => setIsPool(false)}
-            >
-              <View style={s.typeIcon}>{Icons.lock(!isPool ? WHITE : MID, 18)}</View>
-              <Text style={[s.typeTitle, !isPool && {color:WHITE}]}>Private</Text>
-              <Text style={[s.typeDesc, !isPool && {color:WHITE+'BB'}]}>Invite only, not on map</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[s.typeCard, isPool && s.typeCardActivePool]}
-              onPress={() => setIsPool(true)}
-            >
-              <View style={[s.typeIcon, isPool && {backgroundColor:WHITE+'22'}]}>
-                {Icons.globe(isPool ? WHITE : MID, 18)}
-              </View>
-              <Text style={[s.typeTitle, isPool && {color:WHITE}]}>Open Pool</Text>
-              <Text style={[s.typeDesc, isPool && {color:WHITE+'BB'}]}>Visible on map, anyone can join</Text>
-            </TouchableOpacity>
-          </View>
-
-          {!!error && (
-            <View style={s.errorBox}>
-              <Text style={s.errorTxt}>⚠️ {error}</Text>
+            {/* Duration */}
+            <Text style={s.fieldLabel}>Group Expires In</Text>
+            <View style={s.durationRow}>
+              {DURATIONS.map(d => (
+                <TouchableOpacity
+                  key={d.hours}
+                  style={[s.durationChip, duration === d.hours && s.durationChipActive]}
+                  onPress={() => setDuration(d.hours)}
+                >
+                  <Text style={[s.durationChipTxt, duration === d.hours && s.durationChipTxtActive]}>
+                    {d.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
-          )}
 
-          <TouchableOpacity
-            style={[s.createBtn, loading && {opacity:0.7}]}
-            onPress={handleCreate}
-            disabled={loading}
-          >
-            {loading
-              ? <ActivityIndicator color={WHITE}/>
-              : <View style={{flexDirection:'row',alignItems:'center',gap:8}}>
-                  {Icons.save(WHITE, 18)}
-                  <Text style={s.createBtnTxt}>Create Group</Text>
+            {/* Max members */}
+            <Text style={[s.fieldLabel, { marginTop: 16 }]}>Max Members</Text>
+            <View style={s.stepperRow}>
+              <TouchableOpacity
+                style={s.stepBtn}
+                onPress={() => setMaxMembers(m => Math.max(2, m - 1))}
+              >
+                {Icons.minus(TEAL_DEEP, 16)}
+              </TouchableOpacity>
+              <View style={s.stepVal}>
+                <Text style={s.stepValTxt}>{maxMembers}</Text>
+                <Text style={s.stepValLbl}>people max</Text>
+              </View>
+              <TouchableOpacity
+                style={s.stepBtn}
+                onPress={() => setMaxMembers(m => Math.min(50, m + 1))}
+              >
+                {Icons.plus(TEAL_DEEP, 16)}
+              </TouchableOpacity>
+            </View>
+
+            <Text style={s.fieldLabel}>Group Type</Text>
+            <View style={s.typeRow}>
+              <TouchableOpacity
+                style={[s.typeCard, !isPool && s.typeCardActive]}
+                onPress={() => setIsPool(false)}
+              >
+                <View style={s.typeIcon}>{Icons.lock(!isPool ? WHITE : MID, 18)}</View>
+                <Text style={[s.typeTitle, !isPool && {color:WHITE}]}>Private</Text>
+                <Text style={[s.typeDesc, !isPool && {color:WHITE+'BB'}]}>Invite only, not on map</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.typeCard, isPool && s.typeCardActivePool]}
+                onPress={() => setIsPool(true)}
+              >
+                <View style={[s.typeIcon, isPool && {backgroundColor:WHITE+'22'}]}>
+                  {Icons.globe(isPool ? WHITE : MID, 18)}
                 </View>
-            }
-          </TouchableOpacity>
+                <Text style={[s.typeTitle, isPool && {color:WHITE}]}>Open Pool</Text>
+                <Text style={[s.typeDesc, isPool && {color:WHITE+'BB'}]}>Visible on map, anyone can join</Text>
+              </TouchableOpacity>
+            </View>
+
+            {!!error && (
+              <View style={s.errorBox}>
+                <Text style={s.errorTxt}>⚠️ {error}</Text>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={[s.createBtn, loading && {opacity:0.7}]}
+              onPress={handleCreate}
+              disabled={loading}
+            >
+              {loading
+                ? <ActivityIndicator color={WHITE}/>
+                : <View style={{flexDirection:'row',alignItems:'center',gap:8}}>
+                    {Icons.save(WHITE, 18)}
+                    <Text style={s.createBtnTxt}>Create Group</Text>
+                  </View>
+              }
+            </TouchableOpacity>
+            <View style={{height:20}}/>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -214,7 +305,11 @@ function GroupCard({ group, onOpenChat, onLeave, currentUserId }: {
 }) {
   const isOwner     = group.created_by === currentUserId;
   const memberCount = group.member_count || 0;
-  const timeAgo     = (dateStr: string) => {
+  const maxMembers  = group.max_members || null;
+  const fillPct     = maxMembers ? Math.min((memberCount / maxMembers) * 100, 100) : null;
+  const { label: countdown, expired, urgency } = useCountdown(group.expires_at);
+
+  const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1)  return 'Just now';
@@ -224,8 +319,25 @@ function GroupCard({ group, onOpenChat, onLeave, currentUserId }: {
     return `${Math.floor(hrs/24)}d ago`;
   };
 
+  const urgencyColors = {
+    none:    { bg: TEAL+'15',    border: TEAL+'30',    text: TEAL_DEEP },
+    low:     { bg: TEAL+'15',    border: TEAL+'30',    text: TEAL_DEEP },
+    mid:     { bg: '#FEF3C7',    border: '#F59E0B55',  text: '#92400E' },
+    high:    { bg: '#FEE2E2',    border: '#EF444455',  text: '#991B1B' },
+    expired: { bg: '#F3F4F6',    border: '#D1D5DB',    text: '#6B7280' },
+  };
+  const uc = urgencyColors[urgency === 'none' ? 'none' : urgency];
+
+  const fillColor = fillPct === null ? TEAL : fillPct >= 90 ? '#10B981' : fillPct >= 70 ? '#F59E0B' : TEAL;
+
   return (
-    <View style={s.groupCard}>
+    <View style={[s.groupCard, expired && s.groupCardExpired]}>
+      {expired && (
+        <View style={s.expiredOverlay}>
+          <Text style={s.expiredOverlayTxt}>⏱ EXPIRED</Text>
+        </View>
+      )}
+
       {/* Header */}
       <View style={s.groupCardHeader}>
         <View style={[s.groupIconBox, group.is_pool && {backgroundColor:'#F0FFF4'}]}>
@@ -262,10 +374,32 @@ function GroupCard({ group, onOpenChat, onLeave, currentUserId }: {
         </View>
         <View style={s.groupInfoItem}>
           {Icons.users(MID, 14)}
-          <Text style={s.groupInfoTxt}>{memberCount} member{memberCount !== 1 ? 's' : ''}</Text>
+          <Text style={s.groupInfoTxt}>
+            {memberCount}{maxMembers ? `/${maxMembers}` : ''} member{memberCount !== 1 ? 's' : ''}
+          </Text>
         </View>
-        <Text style={s.groupTime}>{timeAgo(group.created_at)}</Text>
+        {!group.expires_at && (
+          <Text style={s.groupTime}>{timeAgo(group.created_at)}</Text>
+        )}
       </View>
+
+      {/* Countdown + progress */}
+      {group.expires_at && (
+        <View style={s.timerRow}>
+          <View style={[s.timerPill, { backgroundColor: uc.bg, borderColor: uc.border }]}>
+            <View style={{ marginRight: 5 }}>{Icons.clock(uc.text, 13)}</View>
+            <Text style={[s.timerTxt, { color: uc.text }]}>{countdown}</Text>
+          </View>
+          {fillPct !== null && (
+            <View style={s.progressWrap}>
+              <View style={s.progressBar}>
+                <View style={[s.progressFill, { width: `${fillPct}%` as any, backgroundColor: fillColor }]}/>
+              </View>
+              <Text style={s.progressTxt}>{memberCount}/{maxMembers}</Text>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Members avatars */}
       {group.members && group.members.length > 0 && (
@@ -280,12 +414,19 @@ function GroupCard({ group, onOpenChat, onLeave, currentUserId }: {
               <Text style={s.memberAvatarMoreTxt}>+{group.members.length - 6}</Text>
             </View>
           )}
+          {maxMembers && maxMembers > memberCount && (
+            <Text style={s.slotsLeft}>{maxMembers - memberCount} slot{maxMembers - memberCount !== 1 ? 's' : ''} open</Text>
+          )}
         </View>
       )}
 
       {/* Actions */}
       <View style={s.groupActions}>
-        <TouchableOpacity style={s.chatBtn} onPress={() => onOpenChat(group.id)}>
+        <TouchableOpacity
+          style={[s.chatBtn, expired && { backgroundColor: MID }]}
+          onPress={() => onOpenChat(group.id)}
+          disabled={expired}
+        >
           <View style={{flexDirection:'row',alignItems:'center',gap:6}}>
             {Icons.chat(WHITE, 16)}
             <Text style={s.chatBtnTxt}>Open Chat</Text>
@@ -335,7 +476,6 @@ export default function GroupOrdersScreen({ onOpenChat }: Props) {
     const uid = userId || currentUser?.id;
     if (!uid) return;
     try {
-      // Fetch groups user is a member of
       const { data: memberRows } = await supabase
         .from('group_members')
         .select('group_id')
@@ -353,7 +493,6 @@ export default function GroupOrdersScreen({ onOpenChat }: Props) {
 
       if (!groupData) { setGroups([]); return; }
 
-      // Fetch members for each group
       const enriched = await Promise.all(groupData.map(async (g:any) => {
         const { data: members } = await supabase
           .from('group_members')
@@ -380,12 +519,10 @@ export default function GroupOrdersScreen({ onOpenChat }: Props) {
     if (!group) return;
 
     if (group.created_by === currentUser.id) {
-      // Owner — delete the group
       await supabase.from('messages').delete().eq('group_id', groupId);
       await supabase.from('group_members').delete().eq('group_id', groupId);
       await supabase.from('groups').delete().eq('id', groupId);
     } else {
-      // Member — just leave
       await supabase.from('group_members')
         .delete()
         .eq('group_id', groupId)
@@ -394,9 +531,13 @@ export default function GroupOrdersScreen({ onOpenChat }: Props) {
     await fetchGroups();
   };
 
-  const myGroups    = groups.filter(g => g.created_by === currentUser?.id || true);
-  const openPools   = groups.filter(g => g.is_pool);
-  const displayed   = activeTab === 'my' ? groups : openPools;
+  // Separate active vs expired
+  const isExpired = (g: Group) => g.expires_at ? new Date(g.expires_at).getTime() < Date.now() : false;
+  const activeGroups  = groups.filter(g => !isExpired(g));
+  const expiredGroups = groups.filter(g => isExpired(g));
+  const openPools     = activeGroups.filter(g => g.is_pool);
+
+  const displayed = activeTab === 'my' ? activeGroups : openPools;
 
   if (loading) {
     return (
@@ -434,8 +575,8 @@ export default function GroupOrdersScreen({ onOpenChat }: Props) {
         {/* Stats */}
         <View style={s.statsRow}>
           <View style={s.statCard}>
-            <Text style={s.statNum}>{groups.length}</Text>
-            <Text style={s.statLbl}>My Groups</Text>
+            <Text style={s.statNum}>{activeGroups.length}</Text>
+            <Text style={s.statLbl}>Active</Text>
           </View>
           <View style={s.statCard}>
             <Text style={[s.statNum, {color:'#276749'}]}>{openPools.length}</Text>
@@ -443,9 +584,9 @@ export default function GroupOrdersScreen({ onOpenChat }: Props) {
           </View>
           <View style={s.statCard}>
             <Text style={[s.statNum, {color:'#B45309'}]}>
-              {groups.reduce((a,g) => a + (g.member_count||0), 0)}
+              {activeGroups.reduce((a,g) => a + (g.member_count||0), 0)}
             </Text>
-            <Text style={s.statLbl}>Total Members</Text>
+            <Text style={s.statLbl}>Members</Text>
           </View>
         </View>
 
@@ -455,7 +596,7 @@ export default function GroupOrdersScreen({ onOpenChat }: Props) {
             style={[s.tab, activeTab==='my' && s.tabActive]}
             onPress={() => setActiveTab('my')}
           >
-            <Text style={[s.tabTxt, activeTab==='my' && s.tabTxtActive]}>My Groups ({groups.length})</Text>
+            <Text style={[s.tabTxt, activeTab==='my' && s.tabTxtActive]}>My Groups ({activeGroups.length})</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[s.tab, activeTab==='pools' && s.tabActive]}
@@ -472,7 +613,7 @@ export default function GroupOrdersScreen({ onOpenChat }: Props) {
               {Icons.users(TEAL_DARK, 36)}
             </View>
             <Text style={s.emptyTitle}>
-              {activeTab === 'my' ? 'No groups yet' : 'No open pools nearby'}
+              {activeTab === 'my' ? 'No active groups' : 'No open pools'}
             </Text>
             <Text style={s.emptySub}>
               {activeTab === 'my'
@@ -497,6 +638,22 @@ export default function GroupOrdersScreen({ onOpenChat }: Props) {
               currentUserId={currentUser?.id || ''}
             />
           ))
+        )}
+
+        {/* Expired groups section */}
+        {expiredGroups.length > 0 && (
+          <View style={s.expiredSection}>
+            <Text style={s.expiredSectionTitle}>⏱ Expired Groups</Text>
+            {expiredGroups.map(group => (
+              <GroupCard
+                key={group.id}
+                group={group}
+                onOpenChat={onOpenChat}
+                onLeave={handleLeave}
+                currentUserId={currentUser?.id || ''}
+              />
+            ))}
+          </View>
         )}
 
         <View style={{height: 100}}/>
@@ -545,7 +702,10 @@ const s = StyleSheet.create({
   tabTxt:     { fontSize:13,fontWeight:'700',color:MID },
   tabTxtActive:{ color:WHITE },
 
-  groupCard:       { backgroundColor:WHITE,borderRadius:18,padding:18,marginBottom:12,borderWidth:1,borderColor:LIGHT_BORDER,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:2 },
+  groupCard:       { backgroundColor:WHITE,borderRadius:18,padding:18,marginBottom:12,borderWidth:1,borderColor:LIGHT_BORDER,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:2,overflow:'hidden' },
+  groupCardExpired:{ opacity:0.65 },
+  expiredOverlay:  { position:'absolute',top:12,right:12,backgroundColor:'#6B7280',paddingHorizontal:8,paddingVertical:3,borderRadius:8,zIndex:10 },
+  expiredOverlayTxt:{ fontSize:9,fontWeight:'900',color:WHITE,letterSpacing:0.5 },
   groupCardHeader: { flexDirection:'row',alignItems:'flex-start',gap:12,marginBottom:12 },
   groupIconBox:    { width:44,height:44,borderRadius:12,backgroundColor:TEAL+'10',alignItems:'center',justifyContent:'center',borderWidth:1,borderColor:TEAL+'20' },
   groupName:       { fontSize:16,fontWeight:'800',color:DARK,marginBottom:4 },
@@ -554,11 +714,22 @@ const s = StyleSheet.create({
   groupTypeTxt:    { fontSize:10,fontWeight:'700' },
   ownerBadge:      { backgroundColor:TEAL+'12',paddingHorizontal:8,paddingVertical:4,borderRadius:8,borderWidth:1,borderColor:TEAL+'30' },
   ownerBadgeTxt:   { fontSize:10,fontWeight:'800',color:TEAL_DEEP },
-  groupInfoRow:    { flexDirection:'row',alignItems:'center',gap:14,marginBottom:12 },
+  groupInfoRow:    { flexDirection:'row',alignItems:'center',gap:14,marginBottom:10 },
   groupInfoItem:   { flexDirection:'row',alignItems:'center',gap:5 },
   groupInfoTxt:    { fontSize:12,color:MID,fontWeight:'500' },
   groupTime:       { marginLeft:'auto' as any,fontSize:11,color:MID },
-  membersRow:      { flexDirection:'row',marginBottom:12 },
+
+  // Countdown + progress
+  timerRow:     { flexDirection:'row',alignItems:'center',gap:10,marginBottom:10 },
+  timerPill:    { flexDirection:'row',alignItems:'center',paddingHorizontal:10,paddingVertical:5,borderRadius:20,borderWidth:1 },
+  timerTxt:     { fontSize:11,fontWeight:'700' },
+  progressWrap: { flex:1,flexDirection:'row',alignItems:'center',gap:8 },
+  progressBar:  { flex:1,height:6,borderRadius:3,backgroundColor:LIGHT_BORDER,overflow:'hidden' },
+  progressFill: { height:'100%' as any,borderRadius:3 },
+  progressTxt:  { fontSize:10,fontWeight:'700',color:MID,minWidth:32 },
+  slotsLeft:    { marginLeft:10,fontSize:11,color:'#276749',fontWeight:'600' },
+
+  membersRow:      { flexDirection:'row',alignItems:'center',marginBottom:12 },
   memberAvatar:    { width:30,height:30,borderRadius:15,backgroundColor:TEAL+'15',borderWidth:2,borderColor:WHITE,alignItems:'center',justifyContent:'center' },
   memberAvatarMore:    { backgroundColor:TEAL_DARK },
   memberAvatarMoreTxt: { fontSize:9,fontWeight:'800',color:WHITE },
@@ -567,6 +738,10 @@ const s = StyleSheet.create({
   chatBtnTxt:      { color:WHITE,fontSize:13,fontWeight:'800' },
   leaveBtn:        { paddingHorizontal:16,paddingVertical:12,borderRadius:12,borderWidth:1.5,borderColor:LIGHT_BORDER,alignItems:'center',justifyContent:'center' },
   leaveBtnTxt:     { fontSize:12,fontWeight:'700',color:MID },
+
+  // Expired section
+  expiredSection:      { marginTop:8,marginBottom:8 },
+  expiredSectionTitle: { fontSize:13,fontWeight:'700',color:MID,marginBottom:10,letterSpacing:0.3 },
 
   emptyState: { alignItems:'center',paddingVertical:48,paddingHorizontal:24 },
   emptyIcon:  { width:88,height:88,borderRadius:22,backgroundColor:TEAL+'10',alignItems:'center',justifyContent:'center',marginBottom:20,borderWidth:1.5,borderColor:TEAL+'25' },
@@ -577,7 +752,7 @@ const s = StyleSheet.create({
 
   // Modal
   modalOverlay: { flex:1,justifyContent:'flex-end',backgroundColor:'rgba(6,32,32,0.6)' },
-  modalSheet:   { backgroundColor:WHITE,borderTopLeftRadius:28,borderTopRightRadius:28,padding:24,paddingBottom:Platform.OS==='ios'?40:28 },
+  modalSheet:   { backgroundColor:WHITE,borderTopLeftRadius:28,borderTopRightRadius:28,padding:24,paddingBottom:Platform.OS==='ios'?40:28,maxHeight:'90%' as any },
   sheetHandle:  { width:40,height:4,borderRadius:2,backgroundColor:LIGHT_BORDER,alignSelf:'center',marginBottom:20 },
   sheetTitleRow:{ flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginBottom:20 },
   sheetTitle:   { fontSize:20,fontWeight:'900',color:DARK },
@@ -588,6 +763,21 @@ const s = StyleSheet.create({
   marketChipActive: { backgroundColor:TEAL_DARK,borderColor:TEAL_DARK },
   marketChipTxt:    { fontSize:12,fontWeight:'700',color:MID },
   marketChipTxtActive:{ color:WHITE },
+
+  // Duration picker
+  durationRow:     { flexDirection:'row',gap:10,marginBottom:8 },
+  durationChip:    { flex:1,paddingVertical:12,borderRadius:12,borderWidth:1.5,borderColor:LIGHT_BORDER,backgroundColor:WHITE,alignItems:'center' },
+  durationChipActive:  { backgroundColor:TEAL_DARK,borderColor:TEAL_DARK },
+  durationChipTxt:     { fontSize:14,fontWeight:'800',color:MID },
+  durationChipTxtActive:{ color:WHITE },
+
+  // Max members stepper
+  stepperRow: { flexDirection:'row',alignItems:'center',gap:16,marginBottom:16 },
+  stepBtn:    { width:42,height:42,borderRadius:21,backgroundColor:TEAL+'12',borderWidth:1.5,borderColor:TEAL+'35',alignItems:'center',justifyContent:'center' },
+  stepVal:    { flex:1,alignItems:'center' },
+  stepValTxt: { fontSize:28,fontWeight:'900',color:DARK },
+  stepValLbl: { fontSize:11,color:MID,fontWeight:'500' },
+
   typeRow:          { flexDirection:'row',gap:12,marginBottom:20 },
   typeCard:         { flex:1,borderRadius:14,padding:14,alignItems:'center',gap:6,borderWidth:1.5,borderColor:LIGHT_BORDER,backgroundColor:WHITE },
   typeCardActive:   { backgroundColor:TEAL_DARK,borderColor:TEAL_DARK },
