@@ -212,219 +212,144 @@ function AIChatbot({ onClose }: { onClose: () => void }) {
 // ══════════════════════════════════════════════════════════════
 // HOME SCREEN
 // ══════════════════════════════════════════════════════════════
-function HomeScreen({ profile, email, onNavigate }: {
+function HomeScreen({ profile, onNavigate }: {
   profile: any | null; email: string; onNavigate: (s: ScreenName) => void;
 }) {
+  const [delivery, setDelivery] = useState(2000);
+  const [people,   setPeople]   = useState(4);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  const hour      = new Date().getHours();
+  const greeting  = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
+  const firstName = profile?.display_name?.split(' ')[0] || profile?.first_name || 'Shopper';
+
+  const perPerson  = Math.round(delivery / people);
+  const savePct    = Math.round(((delivery - perPerson) / delivery) * 100);
+
   const getInitials = () => {
-    if (!profile) return '??';
+    if (!profile) return '?';
     return `${profile.first_name?.[0] || ''}${profile.last_name?.[0] || ''}`.toUpperCase();
   };
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-
-  const stats = [
-    { num:'50+', lbl:'Online\nMarkets', icon: Icons.market(TEAL_DEEP, 15), color: TEAL_DEEP  },
-    { num:'0',  lbl:'Groups\nJoined',     icon: Icons.groups('#6D28D9', 15),  color: '#6D28D9'  },
-    { num:'0',  lbl:'Orders\nSplit',      icon: Icons.orders('#B45309', 15),  color: '#B45309'  },
-  ];
-
-  const quickActions = [
-    { icon: Icons.map(TEAL_DARK, 22),    label:'Find\nNearby',   sub:'See shoppers on map',      bg:'#E6F9F9', stroke:TEAL_DARK,  screen:'Map'    as ScreenName },
-    { icon: Icons.groups('#6D28D9', 22), label:'Create\nGroup',  sub:'Start a group order',      bg:'#EDE9FE', stroke:'#6D28D9', screen:'Groups' as ScreenName },
-    { icon: Icons.cart('#B45309', 22),   label:'Browse\nOrders', sub:'View active group orders', bg:'#FEF3C7', stroke:'#B45309', screen:'Groups' as ScreenName },
-    { icon: Icons.chat('#065F46', 22),   label:'Open\nChat',     sub:'Chat with your group',     bg:'#ECFDF5', stroke:'#065F46', screen:'Chat'   as ScreenName },
-    { icon: Icons.shield('#C53030', 22), label:'Report\nScam',   sub:'Contact FCCPC for help',   bg:'#FFF5F5', stroke:'#C53030', screen:'FCCPC'  as ScreenName },
-  ];
-
-  const tips = [
-    { icon: Icons.tip(TEAL_DARK, 24),  txt:'Select a market and go live on the map to find nearby shoppers instantly.' },
-    { icon: Icons.cart('#B45309', 24), txt:'Groups of 5 can split a ₦2,000 delivery to just ₦400 each.' },
-    { icon: Icons.map(TEAL_DARK, 24),  txt:'The closer your group, the faster and cheaper your combined delivery.' },
-  ];
-
-  const markets = ['Jumia','Konga','Amazon','Jiji','Temu','Aliexpress','Slot','& many more...'];
-
-  // Web: requestAnimationFrame — direct DOM, truly never stops
-  const marqueeRef = useRef<any>(null);
+  // Pulse animation for the live indicator
   useEffect(() => {
-    if (Platform.OS !== 'web') return;
-    let pos = 0;
-    let rafId: number;
-    const tick = () => {
-      const el = marqueeRef.current;
-      if (el) {
-        const halfW = el.scrollWidth / 2;
-        pos += 0.5;
-        if (pos >= halfW) pos = 0;
-        el.style.transform = `translateX(-${pos}px)`;
-      }
-      rafId = requestAnimationFrame(tick);
-    };
-    rafId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafId);
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.5, duration: 900, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1,   duration: 900, useNativeDriver: true }),
+      ])
+    ).start();
   }, []);
 
-  // Native: Animated loop measured from layout
-  const marqueeX = useRef(new Animated.Value(0)).current;
-  const marqueeAnim = useRef<Animated.CompositeAnimation | null>(null);
-  const halfWidth = useRef(0);
-  const onMarqueeLayout = (e: any) => {
-    if (Platform.OS === 'web') return;
-    const w = e.nativeEvent.layout.width / 2;
-    if (halfWidth.current === 0 && w > 0) {
-      halfWidth.current = w;
-      marqueeX.setValue(0);
-      marqueeAnim.current = Animated.loop(
-        Animated.timing(marqueeX, { toValue: -w, duration: w * 14, useNativeDriver: false })
-      );
-      marqueeAnim.current.start();
-    }
-  };
-  useEffect(() => () => { marqueeAnim.current?.stop(); }, []);
+  const actions = [
+    { icon: Icons.map(WHITE, 22),    label: 'Find Nearby',   sub: 'See shoppers on map',     bg: TEAL_DARK,  screen: 'Map'    as ScreenName },
+    { icon: Icons.chat(WHITE, 22),   label: 'My Chats',      sub: 'Chat with your groups',   bg: '#6D28D9',  screen: 'Chat'   as ScreenName },
+    { icon: Icons.groups(WHITE, 22), label: 'Group Orders',  sub: 'Pool & split orders',     bg: '#B45309',  screen: 'Groups' as ScreenName },
+    { icon: Icons.shield(WHITE, 22), label: 'Report Scam',   sub: 'FCCPC consumer help',     bg: '#C53030',  screen: 'FCCPC'  as ScreenName },
+  ];
+
+  const feeOptions = [500, 1000, 1500, 2000, 3000, 5000];
 
   return (
-    <ScrollView style={{flex:1}} contentContainerStyle={s.homeScroll} showsVerticalScrollIndicator={false}>
-      <MapBg/>
-      <Text style={s.wm}>SPLITWI$E</Text>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={hs.scroll} showsVerticalScrollIndicator={false}>
 
-      <View style={s.heroCard}>
-        <View style={s.heroLeft}>
-          <Text style={s.heroGreeting}>{greeting},</Text>
-          <Text style={s.heroName}>{profile?.display_name || profile?.first_name || 'Shopper'}</Text>
-          <Text style={s.heroSub}>Ready to split & save today?</Text>
-        </View>
-        <View style={s.heroAvatar}>
-          {profile?.avatar_emoji?.startsWith?.('http')
-            ? <Image source={{ uri: profile.avatar_emoji }} style={s.heroAvatarImg} />
-            : (profile?.avatar_emoji && profile.avatar_emoji.length <= 4
-                ? <Text style={{fontSize:26}}>{profile.avatar_emoji}</Text>
-                : <Text style={s.heroAvatarTxt}>{getInitials()}</Text>
-              )
-          }
-        </View>
-      </View>
-
-      <View style={s.statsRow}>
-        {stats.map((st, i) => (
-          <View key={i} style={s.statCard}>
-            <View style={s.statIconWrap}>{st.icon}</View>
-            <Text style={[s.statNum, {color:st.color}]}>{st.num}</Text>
-            <Text style={s.statLbl}>{st.lbl}</Text>
+      {/* ── Hero ─────────────────────────────────────────── */}
+      <View style={hs.hero}>
+        {/* Top row: greeting + avatar */}
+        <View style={hs.heroTop}>
+          <View style={{ flex: 1 }}>
+            <Text style={hs.heroGreeting}>Good {greeting} 👋</Text>
+            <Text style={hs.heroName}>{firstName}</Text>
           </View>
-        ))}
+          <View style={hs.avatarWrap}>
+            {profile?.avatar_emoji?.startsWith?.('http')
+              ? <Image source={{ uri: profile.avatar_emoji }} style={hs.avatarImg} />
+              : profile?.avatar_emoji && profile.avatar_emoji.length <= 4
+                ? <Text style={{ fontSize: 28 }}>{profile.avatar_emoji}</Text>
+                : <Text style={hs.avatarTxt}>{getInitials()}</Text>
+            }
+          </View>
+        </View>
+
+        {/* Tagline */}
+        <Text style={hs.heroTagline}>Find shoppers near you — split delivery fees together.</Text>
+
+        {/* CTA */}
+        <TouchableOpacity style={hs.heroBtn} onPress={() => onNavigate('Map')} activeOpacity={0.85}>
+          <Animated.View style={[hs.heroBtnPulse, { transform: [{ scale: pulseAnim }] }]} />
+          <View style={hs.heroBtnDot} />
+          <Text style={hs.heroBtnTxt}>Go Live on Map</Text>
+          {Icons.map(WHITE, 17)}
+        </TouchableOpacity>
       </View>
 
-      <Text style={s.sectionHead}>Quick Actions</Text>
-      <View style={s.quickGrid}>
-        {quickActions.map((a, i) => (
-          <TouchableOpacity key={i} style={[s.quickCard, {backgroundColor:a.bg}]}
-            onPress={() => onNavigate(a.screen)} activeOpacity={0.75}>
-            <View style={[s.quickIconBox, {borderColor:a.stroke+'30'}]}>{a.icon}</View>
-            <Text style={[s.quickLbl, {color:a.stroke}]}>{a.label}</Text>
-            <Text style={[s.quickSublbl, {color:a.stroke+'AA'}]}>{a.sub}</Text>
+      {/* ── Quick actions 2 × 2 ──────────────────────────── */}
+      <View style={hs.grid}>
+        {actions.map((a, i) => (
+          <TouchableOpacity key={i} style={[hs.actionCard, { backgroundColor: a.bg }]}
+            onPress={() => onNavigate(a.screen)} activeOpacity={0.82}>
+            <View style={hs.actionIconWrap}>{a.icon}</View>
+            <Text style={hs.actionLabel}>{a.label}</Text>
+            <Text style={hs.actionSub}>{a.sub}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <Text style={s.sectionHead}>Nearby Activity</Text>
-      <View style={s.activityCard}>
-        <View style={s.activityEmpty}>
-          <View style={s.activityEmptyIcon}>{Icons.activity(TEAL_DARK, 20)}</View>
-          <View style={{flex:1}}>
-            <Text style={s.activityTitle}>No activity nearby yet</Text>
-            <Text style={s.activitySub}>Go live on the map to find nearby shoppers</Text>
+      {/* ── Savings calculator ───────────────────────────── */}
+      <View style={hs.calcCard}>
+        <View style={hs.calcHeader}>
+          <Text style={hs.calcTitle}>💰 Savings Calculator</Text>
+          <Text style={hs.calcSub}>See how much your group saves</Text>
+        </View>
+
+        {/* Delivery fee chips */}
+        <Text style={hs.calcLabel}>Delivery fee</Text>
+        <View style={hs.chipRow}>
+          {feeOptions.map(v => (
+            <TouchableOpacity key={v}
+              style={[hs.chip, delivery === v && hs.chipActive]}
+              onPress={() => setDelivery(v)}>
+              <Text style={[hs.chipTxt, delivery === v && hs.chipTxtActive]}>
+                ₦{v >= 1000 ? `${v / 1000}k` : v}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* People counter */}
+        <Text style={[hs.calcLabel, { marginTop: 16 }]}>People in group</Text>
+        <View style={hs.counterRow}>
+          <TouchableOpacity style={hs.counterBtn}
+            onPress={() => setPeople(p => Math.max(2, p - 1))} activeOpacity={0.7}>
+            <Text style={hs.counterBtnTxt}>−</Text>
+          </TouchableOpacity>
+          <View style={hs.counterValWrap}>
+            <Text style={hs.counterVal}>{people}</Text>
+            <Text style={hs.counterValLbl}>people</Text>
           </View>
-          <TouchableOpacity style={s.joinBtn} onPress={() => onNavigate('Map')}>
-            <Text style={s.joinBtnTxt}>View Map</Text>
+          <TouchableOpacity style={hs.counterBtn}
+            onPress={() => setPeople(p => Math.min(20, p + 1))} activeOpacity={0.7}>
+            <Text style={hs.counterBtnTxt}>+</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Result */}
+        <View style={hs.calcResult}>
+          <View>
+            <Text style={hs.calcResultLbl}>Each person pays</Text>
+            <Text style={hs.calcResultAmt}>₦{perPerson.toLocaleString()}</Text>
+          </View>
+          <View style={hs.saveBadge}>
+            <Text style={hs.saveBadgeTxt}>Save {savePct}%</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity style={hs.calcCta} onPress={() => onNavigate('Map')} activeOpacity={0.85}>
+          <Text style={hs.calcCtaTxt}>Find a group now →</Text>
+        </TouchableOpacity>
       </View>
 
-      <Text style={s.sectionHead}>How It Works</Text>
-      <View style={s.howCard}>
-        {[
-          { icon:Icons.map(WHITE,14),     title:'Go Live on Map', desc:'Select a market and tap Go Live to show up on the map.' },
-          { icon:Icons.groups(WHITE,14),  title:'Find & Connect', desc:'Tap a nearby shopper pin to create a group chat.' },
-          { icon:Icons.savings(WHITE,14), title:'Split & Save',   desc:'Pool orders, place one delivery, split the fee.' },
-        ].map((item, i) => (
-          <View key={i}>
-            <View style={s.howRow}>
-              <View style={s.howStep}>{item.icon}</View>
-              <View style={{flex:1}}>
-                <Text style={s.howTitle}>{item.title}</Text>
-                <Text style={s.howDesc}>{item.desc}</Text>
-              </View>
-            </View>
-            {i < 2 && <View style={[s.divider, {marginLeft:52}]}/>}
-          </View>
-        ))}
-      </View>
-
-      <Text style={s.sectionHead}>Savings Tips</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tipsScroll}>
-        {tips.map((t, i) => (
-          <View key={i} style={s.tipCard}>
-            <View style={s.tipIconWrap}>{t.icon}</View>
-            <Text style={s.tipTxt}>{t.txt}</Text>
-          </View>
-        ))}
-      </ScrollView>
-
-      <Text style={s.sectionHead}>Supported Markets</Text>
-      <View style={s.marketsMarqueeWrap}>
-        {Platform.OS === 'web' ? (
-          <View ref={marqueeRef} style={s.marketsMarqueeRow}>
-            {[...markets, ...markets].map((m, i) => (
-              m === '& many more...'
-                ? <View key={i} style={[s.marketPill, s.marketPillMore]}><Text style={s.marketPillMoreTxt}>{m}</Text></View>
-                : <View key={i} style={s.marketPill}>
-                    <View style={s.marketPillIcon}>{Icons.market(TEAL_DEEP, 11)}</View>
-                    <Text style={s.marketPillTxt}>{m}</Text>
-                  </View>
-            ))}
-          </View>
-        ) : (
-          <Animated.View onLayout={onMarqueeLayout} style={[s.marketsMarqueeRow, { transform: [{ translateX: marqueeX }] }]}>
-            {[...markets, ...markets].map((m, i) => (
-              m === '& many more...'
-                ? <View key={i} style={[s.marketPill, s.marketPillMore]}><Text style={s.marketPillMoreTxt}>{m}</Text></View>
-                : <View key={i} style={s.marketPill}>
-                    <View style={s.marketPillIcon}>{Icons.market(TEAL_DEEP, 11)}</View>
-                    <Text style={s.marketPillTxt}>{m}</Text>
-                  </View>
-            ))}
-          </Animated.View>
-        )}
-      </View>
-
-      <Text style={s.sectionHead}>Account Status</Text>
-      <View style={s.verifyCard}>
-        {[
-          { label:'Email', value: email,                 done: true           },
-          { label:'Phone', value: profile?.phone || '—', done: !!profile?.phone },
-        ].map((item, i, arr) => (
-          <View key={i}>
-            <View style={s.verifyRow}>
-              <Text style={s.verifyLabel}>{item.label}</Text>
-              <Text style={s.verifyValue} numberOfLines={1}>{item.value}</Text>
-              <View style={[s.verifyPill,{
-                backgroundColor: item.done ? '#F0FFF4':'#FFF8E6',
-                borderColor:     item.done ? '#68D391':'#F6AD55',
-              }]}>
-                <View style={{flexDirection:'row',alignItems:'center',gap:3}}>
-                  {item.done ? Icons.check('#276749',11) : null}
-                  <Text style={[s.verifyPillTxt,{color:item.done?'#276749':'#B7791F'}]}>
-                    {item.done ? 'Done' : '⏳ Pending'}
-                  </Text>
-                </View>
-              </View>
-            </View>
-            {i < arr.length-1 && <View style={s.divider}/>}
-          </View>
-        ))}
-      </View>
-      <View style={{height:100}}/>
+      <View style={{ height: 120 }} />
     </ScrollView>
   );
 }
@@ -905,6 +830,78 @@ const s = StyleSheet.create({
   botFabBadge:   { position:'absolute',top:-2,right:-2,backgroundColor:'#FF6B6B',borderRadius:10,paddingHorizontal:5,paddingVertical:2,borderWidth:2,borderColor:WHITE },
   botFabBadgeTxt:{ fontSize:9,fontWeight:'900',color:WHITE },
   botWindow:     { position:'absolute',bottom:100,right:20,width:Platform.OS==='web'?380:(SCREEN_WIDTH-32),height:Platform.OS==='web'?520:480,backgroundColor:WHITE,borderRadius:20,shadowColor:'#000',shadowOffset:{width:0,height:12},shadowOpacity:0.2,shadowRadius:32,elevation:20,zIndex:49,overflow:'hidden',borderWidth:1,borderColor:LIGHT_BORDER },
+});
+
+// ── Home screen styles (separate sheet keeps the main one clean) ──
+const hs = StyleSheet.create({
+  scroll: { paddingBottom: 40 },
+
+  // Hero
+  hero:         { margin: 16, marginTop: 20, backgroundColor: TEAL_DEEP, borderRadius: 24, padding: 24,
+                  shadowColor: TEAL_DEEP, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 20, elevation: 8 },
+  heroTop:      { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
+  heroGreeting: { fontSize: 13, color: WHITE + '99', fontWeight: '500', marginBottom: 2 },
+  heroName:     { fontSize: 26, fontWeight: '900', color: WHITE, letterSpacing: -0.5 },
+  heroTagline:  { fontSize: 13, color: WHITE + 'BB', lineHeight: 20, marginBottom: 20 },
+  avatarWrap:   { width: 52, height: 52, borderRadius: 26, backgroundColor: WHITE + '22',
+                  borderWidth: 2, borderColor: WHITE + '44', alignItems: 'center', justifyContent: 'center',
+                  marginLeft: 12, overflow: 'hidden' },
+  avatarImg:    { width: 52, height: 52, borderRadius: 26 },
+  avatarTxt:    { fontSize: 18, fontWeight: '900', color: WHITE },
+
+  heroBtn:      { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: WHITE + '22',
+                  borderWidth: 1, borderColor: WHITE + '44', borderRadius: 14,
+                  paddingVertical: 14, paddingHorizontal: 20, alignSelf: 'stretch', justifyContent: 'center' },
+  heroBtnPulse: { position: 'absolute', width: 10, height: 10, borderRadius: 5,
+                  backgroundColor: '#4ADE80' + '40', left: 20 },
+  heroBtnDot:   { width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ADE80' },
+  heroBtnTxt:   { flex: 1, color: WHITE, fontWeight: '800', fontSize: 15, letterSpacing: 0.2 },
+
+  // 2×2 action grid
+  grid:         { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginHorizontal: 16, marginBottom: 16 },
+  actionCard:   { width: '47%', flex: 1, borderRadius: 18, padding: 18, gap: 6,
+                  shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 5 },
+  actionIconWrap:{ width: 42, height: 42, borderRadius: 12, backgroundColor: WHITE + '22',
+                   alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  actionLabel:  { fontSize: 14, fontWeight: '800', color: WHITE },
+  actionSub:    { fontSize: 11, color: WHITE + 'BB', lineHeight: 16 },
+
+  // Savings calculator
+  calcCard:     { marginHorizontal: 16, marginBottom: 16, backgroundColor: WHITE, borderRadius: 20,
+                  padding: 20, borderWidth: 1, borderColor: LIGHT_BORDER,
+                  shadowColor: TEAL, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 16, elevation: 4 },
+  calcHeader:   { marginBottom: 18 },
+  calcTitle:    { fontSize: 17, fontWeight: '900', color: DARK, marginBottom: 3 },
+  calcSub:      { fontSize: 12, color: MID },
+  calcLabel:    { fontSize: 12, fontWeight: '700', color: MID, marginBottom: 10, textTransform: 'uppercase' as any, letterSpacing: 0.8 },
+
+  chipRow:      { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip:         { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+                  borderWidth: 1.5, borderColor: LIGHT_BORDER, backgroundColor: BG },
+  chipActive:   { backgroundColor: TEAL_DEEP, borderColor: TEAL_DEEP },
+  chipTxt:      { fontSize: 13, fontWeight: '700', color: MID },
+  chipTxtActive:{ color: WHITE },
+
+  counterRow:   { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  counterBtn:   { width: 42, height: 42, borderRadius: 21, backgroundColor: TEAL + '15',
+                  borderWidth: 1.5, borderColor: TEAL + '40', alignItems: 'center', justifyContent: 'center' },
+  counterBtnTxt:{ fontSize: 22, fontWeight: '700', color: TEAL_DEEP, lineHeight: 26 },
+  counterValWrap:{ alignItems: 'center' },
+  counterVal:   { fontSize: 32, fontWeight: '900', color: DARK, lineHeight: 36 },
+  counterValLbl:{ fontSize: 11, color: MID, fontWeight: '500' },
+
+  calcResult:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                  marginTop: 20, backgroundColor: TEAL_DEEP + '08', borderRadius: 14,
+                  padding: 16, borderWidth: 1, borderColor: TEAL + '20' },
+  calcResultLbl:{ fontSize: 12, color: MID, fontWeight: '600', marginBottom: 4 },
+  calcResultAmt:{ fontSize: 32, fontWeight: '900', color: TEAL_DEEP },
+  saveBadge:    { backgroundColor: '#ECFDF5', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 8,
+                  borderWidth: 1, borderColor: '#6EE7B7' },
+  saveBadgeTxt: { fontSize: 15, fontWeight: '900', color: '#065F46' },
+
+  calcCta:      { marginTop: 14, backgroundColor: TEAL_DARK, borderRadius: 12,
+                  paddingVertical: 14, alignItems: 'center' },
+  calcCtaTxt:   { color: WHITE, fontWeight: '800', fontSize: 14 },
 });
 
 const bot = StyleSheet.create({
