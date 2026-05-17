@@ -183,8 +183,9 @@ function LeftPanel({ heading, sub, btnLabel, onBtnPress }: {
 // ══════════════════════════════════════════════════════════════
 // SIGN UP
 // ══════════════════════════════════════════════════════════════
-function SignUpScreen({ onBack, onSuccess, onSignIn }: {
+function SignUpScreen({ onBack, onSuccess, onSignIn, onPrivacy, onTerms }: {
   onBack: () => void; onSuccess: () => void; onSignIn?: () => void;
+  onPrivacy?: () => void; onTerms?: () => void;
 }) {
   const [form, setForm] = useState({
     firstName:'', lastName:'', email:'',
@@ -324,8 +325,10 @@ function SignUpScreen({ onBack, onSuccess, onSignIn }: {
                 {agreed && <CheckSVG/>}
               </View>
               <Text style={f.checkTxt}>
-                I agree to the <Text style={{color:TEAL_DARK,fontWeight:'600'}}>Terms of Service</Text>
-                {' '}and <Text style={{color:TEAL_DARK,fontWeight:'600'}}>Privacy Policy</Text>
+                I agree to the{' '}
+                <Text style={{color:TEAL_DARK,fontWeight:'600'}} onPress={onTerms}>Terms of Service</Text>
+                {' '}and{' '}
+                <Text style={{color:TEAL_DARK,fontWeight:'600'}} onPress={onPrivacy}>Privacy Policy</Text>
               </Text>
             </TouchableOpacity>
             {errors.agreed&&<Text style={f.error}>{errors.agreed}</Text>}
@@ -663,16 +666,19 @@ interface AuthScreenProps {
   onSuccess: () => void;
   onSwitchToSignIn?: () => void;
   onSwitchToSignUp?: () => void;
+  onPrivacy?: () => void;
+  onTerms?: () => void;
 }
 
 export default function AuthScreen({
   mode = 'signup', onBack, onSuccess,
   onSwitchToSignIn, onSwitchToSignUp,
+  onPrivacy, onTerms,
 }: AuthScreenProps) {
   if (mode === 'signin') {
     return <SignInScreen onBack={onBack} onSuccess={onSuccess} onSignUp={onSwitchToSignUp}/>;
   }
-  return <SignUpScreen onBack={onBack} onSuccess={onSuccess} onSignIn={onSwitchToSignIn}/>;
+  return <SignUpScreen onBack={onBack} onSuccess={onSuccess} onSignIn={onSwitchToSignIn} onPrivacy={onPrivacy} onTerms={onTerms}/>;
 }
 
 // ══════════════════════════════════════════════════════════════

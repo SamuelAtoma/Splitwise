@@ -1,10 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, ActivityIndicator, Text, Platform } from 'react-native';
 import { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, supabaseMisconfigured } from './lib/supabase';
 import { initSentry, setUserContext, clearUserContext, captureError } from './lib/sentry';
 import ErrorBoundary from './components/ErrorBoundary';
-import LandingPage from './components/LandingPage';
 import Onboarding from './components/Onboarding';
 import AuthScreen from './components/AuthScreen';
 import ProfileSetup from './components/ProfileSetup';
@@ -14,28 +14,30 @@ import TermsOfService from './components/TermsOfService';
 
 const TEAL_DARK = '#0D8F8F';
 
-type Screen = 'loading' | 'landing' | 'onboarding' | 'signup' | 'signin' | 'profile_setup' | 'dashboard' | 'privacy' | 'terms';
+// Persisted flag — set after user completes onboarding for the first time
+const ONBOARDING_KEY = 'splitwise_onboarding_done';
 
-const HISTORY_SCREENS: Screen[] = ['landing', 'onboarding', 'signup', 'signin', 'profile_setup', 'dashboard', 'privacy', 'terms'];
+type Screen = 'loading' | 'onboarding' | 'signup' | 'signin' | 'profile_setup' | 'dashboard' | 'privacy' | 'terms';
+
+const HISTORY_SCREENS: Screen[] = ['onboarding', 'signup', 'signin', 'profile_setup', 'dashboard', 'privacy', 'terms'];
 
 // Initialise Sentry as early as possible (non-blocking)
 initSentry().catch(() => {});
 
 function AppContent() {
   const [screen, setScreen] = useState<Screen>('loading');
-  const [initError, setInitError] = useState<string | null>(null);
 
   const navigate = (next: Screen) => {
     setScreen(next);
     if (Platform.OS === 'web' && HISTORY_SCREENS.includes(next)) {
-      window.history.pushState({ screen: next }, '', `/${next === 'landing' ? '' : next}`);
+      window.history.pushState({ screen: next }, '', `/${next === 'onboarding' ? '' : next}`);
     }
   };
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
     const onPop = (e: PopStateEvent) => {
-      const s: Screen = e.state?.screen ?? 'landing';
+      const s: Screen = e.state?.screen ?? 'onboarding';
       setScreen(s);
     };
     window.addEventListener('popstate', onPop);
@@ -46,27 +48,31 @@ function AppContent() {
     let mounted = true;
 
     const bootstrap = async () => {
-      // If env vars are missing (mis-deploy), drop straight to landing — don't crash.
+      // If Supabase env vars are missing (mis-deploy), skip straight to onboarding/signin
       if (supabaseMisconfigured) {
-        navigate('landing');
+        const done = await AsyncStorage.getItem(ONBOARDING_KEY).catch(() => null);
+        navigate(done ? 'signin' : 'onboarding');
         return;
       }
+
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
         if (!mounted) return;
+
         if (session) {
           setUserContext(session.user.id, session.user.email);
           await checkProfileSetup(session.user.id);
         } else {
-          navigate('landing');
+          // No session — first-time user sees onboarding, returning user goes straight to sign in
+          const done = await AsyncStorage.getItem(ONBOARDING_KEY).catch(() => null);
+          navigate(done ? 'signin' : 'onboarding');
         }
       } catch (err: any) {
         if (!mounted) return;
         captureError(err, { context: 'bootstrap' });
         console.error('[App] Session init failed:', err);
-        // Don't block the user — send them to landing so they can still use the app
-        navigate('landing');
+        navigate('onboarding');
       }
     };
 
@@ -96,15 +102,10 @@ function AppContent() {
         .eq('id', userId)
         .maybeSingle();
       if (error) throw error;
-      if (data?.display_name) {
-        navigate('dashboard');
-      } else {
-        navigate('profile_setup');
-      }
+      navigate(data?.display_name ? 'dashboard' : 'profile_setup');
     } catch (err: any) {
       captureError(err, { context: 'checkProfileSetup', userId });
       console.error('[App] Profile check failed:', err);
-      // Fail open — send to profile_setup so user can complete their profile
       navigate('profile_setup');
     }
   };
@@ -115,7 +116,6 @@ function AppContent() {
         <StatusBar style="dark" />
         <ActivityIndicator size="large" color={TEAL_DARK} />
         <Text style={s.loadingTxt}>SPLITWI$E</Text>
-        {initError && <Text style={s.errorTxt}>{initError}</Text>}
       </View>
     );
   }
@@ -123,47 +123,57 @@ function AppContent() {
   return (
     <View style={s.root}>
       <StatusBar style="dark" />
-      {screen === 'landing' && (
-        <LandingPage
-          onGetStarted={() => navigate('onboarding')}
-          onSignIn={() => navigate('signin')}
-          onPrivacy={() => navigate('privacy')}
-          onTerms={() => navigate('terms')}
-        />
-      )}
+
       {screen === 'onboarding' && (
-        <Onboarding onFinish={() => navigate('signup')} />
+        <Onboarding onFinish={async () => {
+          // Mark onboarding as seen so returning users skip straight to sign in
+          await AsyncStorage.setItem(ONBOARDING_KEY, 'true').catch(() => {});
+          navigate('signup');
+        }} />
       )}
+
       {screen === 'signup' && (
         <AuthScreen
           mode="signup"
           onBack={() => navigate('onboarding')}
           onSuccess={() => navigate('profile_setup')}
           onSwitchToSignIn={() => navigate('signin')}
+          onPrivacy={() => navigate('privacy')}
+          onTerms={() => navigate('terms')}
         />
       )}
+
       {screen === 'signin' && (
         <AuthScreen
           mode="signin"
           onBack={() => navigate('onboarding')}
           onSuccess={() => navigate('dashboard')}
           onSwitchToSignUp={() => navigate('signup')}
+          onPrivacy={() => navigate('privacy')}
+          onTerms={() => navigate('terms')}
         />
       )}
+
       {screen === 'profile_setup' && (
         <ProfileSetup
           onComplete={() => navigate('dashboard')}
           onBack={() => navigate('signin')}
         />
       )}
+
       {screen === 'dashboard' && (
-        <DrawerNavigator onSignOut={() => { clearUserContext(); navigate('landing'); }} onEditProfile={() => navigate('profile_setup')} />
+        <DrawerNavigator
+          onSignOut={() => { clearUserContext(); navigate('signin'); }}
+          onEditProfile={() => navigate('profile_setup')}
+        />
       )}
+
       {screen === 'privacy' && (
-        <PrivacyPolicy onBack={() => navigate('landing')} />
+        <PrivacyPolicy onBack={() => navigate('signin')} />
       )}
+
       {screen === 'terms' && (
-        <TermsOfService onBack={() => navigate('landing')} />
+        <TermsOfService onBack={() => navigate('signin')} />
       )}
     </View>
   );
@@ -181,5 +191,4 @@ const s = StyleSheet.create({
   root:       { flex: 1 },
   loading:    { flex: 1, backgroundColor: '#F8FEFE', alignItems: 'center', justifyContent: 'center', gap: 16 },
   loadingTxt: { fontSize: 22, fontWeight: '900', color: '#0A6E6E', letterSpacing: 1.5 },
-  errorTxt:   { fontSize: 13, color: '#E53E3E', textAlign: 'center', paddingHorizontal: 24 },
 });
