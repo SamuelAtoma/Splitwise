@@ -723,7 +723,7 @@ const sl = StyleSheet.create({
   // CTA slide
   ctaBtns:      { paddingHorizontal: 24, paddingBottom: Platform.OS === 'ios' ? 44 : 32, gap: 14 },
   ctaMain:      { paddingVertical: 18, borderRadius: 16, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 10 },
-  ctaMainTxt:   { fontSize: 17, fontWeight: '900', color: DARK, letterSpacing: 0.5 },
+  ctaMainTxt:   { fontSize: 17, fontWeight: '900', color: '#062020', letterSpacing: 0.5 },
   ctaGhost:     { paddingVertical: 12, alignItems: 'center' },
   ctaGhostTxt:  { fontSize: 14, color: WHITE + '70', fontWeight: '600' },
 });
