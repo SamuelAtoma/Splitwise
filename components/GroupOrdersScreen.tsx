@@ -4,6 +4,7 @@ import {
   RefreshControl, ActivityIndicator, Platform, TextInput, Modal,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { MARKET_NAMES } from '../lib/constants';
 
 const TEAL       = '#17B8B8';
 const TEAL_DARK  = '#0D8F8F';
@@ -80,7 +81,7 @@ function CreateGroupModal({ visible, onClose, onCreated, currentUser, profile }:
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState('');
 
-  const markets = ['Jumia','Konga','Amazon','Jiji','Temu','Aliexpress','Shoprite','Slot'];
+  const markets = MARKET_NAMES;
 
   const handleCreate = async () => {
     if (!name.trim())   { setError('Please enter a group name'); return; }

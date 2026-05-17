@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { supabase } from '../lib/supabase';
+import { SUPPORTED_MARKETS } from '../lib/constants';
 import { distanceKm, createCircle, avatarHtml } from '../lib/utils';
 import {
   Svg, CartIcon, PinIcon, ChevronIcon, RecenterIcon, SignalIcon, LocationIcon, ShieldIcon,
@@ -574,16 +575,7 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
     if (data && data.length > 0) {
       setMarkets(data);
     } else {
-      setMarkets([
-        { id:'1', name:'Jumia',      logo_emoji:'🛒', is_custom:false },
-        { id:'2', name:'Konga',      logo_emoji:'🛍️', is_custom:false },
-        { id:'3', name:'Amazon',     logo_emoji:'📦', is_custom:false },
-        { id:'4', name:'Jiji',       logo_emoji:'🏷️', is_custom:false },
-        { id:'5', name:'Temu',       logo_emoji:'🎁', is_custom:false },
-        { id:'6', name:'Aliexpress', logo_emoji:'✈️', is_custom:false },
-        { id:'7', name:'Shoprite',   logo_emoji:'🏪', is_custom:false },
-        { id:'8', name:'Slot',       logo_emoji:'📱', is_custom:false },
-      ]);
+      setMarkets(SUPPORTED_MARKETS);
     }
   };
 

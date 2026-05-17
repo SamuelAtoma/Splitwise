@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   Platform, useWindowDimensions,
 } from 'react-native';
+import { MARKET_NAMES } from '../lib/constants';
 
 const TEAL      = '#17B8B8';
 const TEAL_DARK = '#0D8F8F';
@@ -36,7 +37,7 @@ const USERS = [
   { lat:6.5180, lng:3.3820, emoji:'👩‍⚕️', name:'Amara',   market:'temu'      },
 ];
 
-const MARKETS = ['Jumia','Konga','Amazon','Jiji','Temu','Aliexpress','Slot','& many more...'];
+const MARKETS = [...MARKET_NAMES, '& many more...'];
 
 const STEPS = [
   { n:'1', title:'Sign Up',          desc:'Create your account. Whether you\'re on campus, in a hostel, or anywhere in Nigeria — see who\'s nearby on the live map instantly.' },
