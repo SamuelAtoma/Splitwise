@@ -531,7 +531,10 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
   const [currentUser,     setCurrentUser]     = useState<any>(null);
   const [myProfile,       setMyProfile]       = useState<any>(null);
   const [isOnMap,         setIsOnMap]         = useState(false);
-  const heartbeatRef = useRef<any>(null);
+  const heartbeatRef     = useRef<any>(null);
+  // Ref keeps the user ID immediately available in async callbacks
+  // without depending on React state timing (fixes ghost-pin race condition)
+  const currentUserIdRef = useRef<string>('');
 
   const radiusOptions = [1, 2, 3, 5, 10, 20];
 
@@ -551,9 +554,16 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
   const init = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
+      // Set ref immediately — available to all async callbacks without waiting for React re-render
+      currentUserIdRef.current = user.id;
       setCurrentUser(user);
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
       if (profile) setMyProfile(profile);
+
+      // ── Purge ghost sessions from previous visits ────────────────
+      // Without this, every browser-close without "Go Offline" leaves a
+      // stale row — and the user sees themselves as a tappable stranger.
+      await supabase.from('map_sessions').delete().eq('user_id', user.id);
     }
     await fetchMarkets();
     await requestLocation();
@@ -654,10 +664,16 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
 
   const fetchNearbyUsers = async () => {
     if (!location) return;
+    // Only show sessions that had a heartbeat in the last 3 minutes.
+    // Heartbeat runs every 60 s, so 3 min = 3 missed heartbeats = truly dead session.
+    const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000).toISOString();
     const { data } = await supabase
       .from('map_sessions')
       .select(`*, profile:profiles(first_name, last_name, avatar_emoji)`)
-      .neq('user_id', currentUser?.id || '');
+      // Use ref (not state) so the filter is always correct even on the first
+      // fetch that fires before React has flushed the setCurrentUser() state update
+      .neq('user_id', currentUserIdRef.current)
+      .gte('last_seen', threeMinutesAgo);
     if (!data) return;
     const nearby = data.filter((u: any) =>
       distanceKm(location.lat, location.lng, u.lat, u.lng) <= radius
@@ -667,6 +683,10 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
 
   const goOnMap = async () => {
     if (!location || !selectedMarket || !currentUser) return;
+    // Remove any lingering session for this user before creating a fresh one.
+    // Prevents duplicate pins if "Go Live" is tapped more than once or if a
+    // previous session wasn't cleaned up properly.
+    await supabase.from('map_sessions').delete().eq('user_id', currentUser.id);
     const { data, error } = await supabase.from('map_sessions').insert({
       user_id:     currentUser.id,
       market_name: selectedMarket.name,
@@ -703,8 +723,13 @@ export default function MapScreen({ onOpenChat }: MapScreenProps) {
 
   const cleanupSession = async () => {
     if (heartbeatRef.current) { clearInterval(heartbeatRef.current); heartbeatRef.current = null; }
-    if (mySessionId) await supabase.from('map_sessions').delete().eq('id', mySessionId);
-    if (currentUser) await supabase.from('profiles').update({ is_on_map:false }).eq('id', currentUser.id);
+    // Delete ALL sessions for this user (by user_id, not just the current session id)
+    // so we never leave ghost rows regardless of how the component unmounts.
+    const uid = currentUserIdRef.current || currentUser?.id;
+    if (uid) {
+      await supabase.from('map_sessions').delete().eq('user_id', uid);
+      await supabase.from('profiles').update({ is_on_map: false }).eq('id', uid);
+    }
   };
 
   const handleSelectMarket = async (market: Market) => {
