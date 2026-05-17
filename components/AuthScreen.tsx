@@ -218,7 +218,10 @@ function SignUpScreen({ onBack, onSuccess, onSignIn, onPrivacy, onTerms }: {
       setSocialLoading(provider); setErrors({});
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined },
+        options: {
+          redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+          queryParams: { prompt: 'select_account' },
+        },
       });
       if (error) throw error;
     } catch (err: any) {
@@ -482,7 +485,10 @@ function SignInScreen({ onBack, onSuccess, onSignUp }: {
       setSocialLoading(provider); setErrors({});
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined },
+        options: {
+          redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+          queryParams: { prompt: 'select_account' },
+        },
       });
       if (error) throw error;
     } catch (err: any) {
