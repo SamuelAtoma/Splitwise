@@ -125,11 +125,14 @@ function AppContent() {
       <StatusBar style="dark" />
 
       {screen === 'onboarding' && (
-        <Onboarding onFinish={async () => {
-          // Mark onboarding as seen so returning users skip straight to sign in
-          await AsyncStorage.setItem(ONBOARDING_KEY, 'true').catch(() => {});
-          navigate('signup');
-        }} />
+        <Onboarding
+          onFinish={async () => {
+            // Mark onboarding as seen so returning users skip straight to sign in
+            await AsyncStorage.setItem(ONBOARDING_KEY, 'true').catch(() => {});
+            navigate('signup');
+          }}
+          onSignIn={() => navigate('signin')}
+        />
       )}
 
       {screen === 'signup' && (
