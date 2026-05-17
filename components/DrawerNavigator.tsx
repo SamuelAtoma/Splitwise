@@ -11,22 +11,26 @@ import GroupOrdersScreen from './GroupOrdersScreen';
 import ChatScreen from './ChatScreen';
 import FCCPCScreen from './FCCPCScreen';
 
-const TEAL       = '#17B8B8';
-const TEAL_DARK  = '#0D8F8F';
-const TEAL_DEEP  = '#0A6E6E';
-const WHITE      = '#FFFFFF';
-const DARK       = '#062020';
-const MID        = '#3A7070';
-const BG         = '#F8FEFE';
+// ── Palette ──────────────────────────────────────────────────────
+const TEAL        = '#17B8B8';
+const TEAL_DARK   = '#0D8F8F';
+const TEAL_DEEP   = '#0A6E6E';
+const WHITE       = '#FFFFFF';
+const DARK        = '#062020';
+const MID         = '#3A7070';
+const BG          = '#F8FEFE';
 const LIGHT_BORDER = '#C8E8E8';
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DRAWER_WIDTH = Math.min(300, SCREEN_WIDTH * 0.78);
+// Cap content width so the 2-column action grid always wraps correctly on desktop too
+const CONTENT_W = Math.min(SCREEN_WIDTH, 540);
+const CARD_W    = Math.floor((CONTENT_W - 44) / 2);  // 16 + 12 + 16 = 44 (margin+gap+margin)
 
 type ScreenName = 'Home' | 'Map' | 'Groups' | 'Chat' | 'Profile' | 'FCCPC';
 
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 // AI CHATBOT
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 const SPLITWISE_CONTEXT = `You are the SPLITWI$E AI assistant. SPLITWI$E is a Nigerian app that helps people find nearby shoppers ordering from the same online market (Jumia, Konga, Amazon, Jiji, Temu, Aliexpress, Shoprite, Slot, etc.) to pool orders, meet minimum order thresholds, and split delivery fees.
 
 Key features:
@@ -55,28 +59,28 @@ function getLocalResponse(question: string): string {
   const q = question.toLowerCase();
 
   if (q.includes('hello') || q.includes('hi') || q.includes('hey') || q.includes('good morning') || q.includes('good afternoon') || q.includes('good evening'))
-    return "Hello! 👋 I'm the SPLITWI$E assistant. I can help you with:\n\n• How group ordering works\n• Supported markets\n• Going live on the map\n• Saving on delivery fees\n• Reporting scams (FCCPC)\n\nWhat would you like to know?";
+    return "Hello! I'm the SPLITWI$E assistant. I can help you with:\n\n• How group ordering works\n• Supported markets\n• Going live on the map\n• Saving on delivery fees\n• Reporting scams (FCCPC)\n\nWhat would you like to know?";
 
   if (q.includes('fccpc') || q.includes('scam') || q.includes('fake') || q.includes('report') || q.includes('consumer') || q.includes('cheat') || q.includes('fraud') || q.includes('deceiv'))
-    return "If you've been scammed by an online market, you can **report it to the FCCPC** — Nigeria's official consumer protection body.\n\n📞 Toll-free: +234 800 000 2121\n📧 contact@fccpc.gov.ng\n🌐 complaints.fccpc.gov.ng\n\nReporting is **free** and government-backed. Tap **Report a Scam** in the sidebar to access the full guide.";
+    return "If you've been scammed by an online market, you can **report it to the FCCPC** — Nigeria's official consumer protection body.\n\n📞 Toll-free: +234 800 000 2121\n📧 contact@fccpc.gov.ng\n🌐 complaints.fccpc.gov.ng\n\nReporting is **free** and government-backed. Tap **Report a Scam** in the Profile tab to access the full guide.";
 
   if (q.includes('market') || q.includes('jumia') || q.includes('konga') || q.includes('amazon') || q.includes('jiji') || q.includes('temu') || q.includes('aliexpress') || q.includes('slot') || q.includes('support'))
-    return "SPLITWI$E supports all major Nigerian online markets:\n\n🛒 Jumia · Konga · Amazon\n📦 Jiji · Temu · Aliexpress · Slot\n\nYou can also **add any custom market** not listed — just type the name when selecting a market!";
+    return "SPLITWI$E supports all major Nigerian online markets:\n\nJumia · Konga · Amazon\nJiji · Temu · Aliexpress · Slot\n\nYou can also **add any custom market** not listed — just type the name when selecting a market!";
 
   if ((q.includes('how') && q.includes('work')) || q.includes('explain') || q.includes('what is splitwise') || q.includes('what is splitwi'))
-    return "Here's how SPLITWI$E works:\n\n1️⃣ **Select a market** (Jumia, Amazon, etc.)\n2️⃣ **Go to Map** — set your delivery radius\n3️⃣ **Go Live** — your pin appears on the map\n4️⃣ **Connect** — tap a nearby shopper's pin\n5️⃣ **Split** — share one delivery, divide the fee\n\nExample: ₦2,000 delivery ÷ 5 people = **₦400 each!** 💰";
+    return "Here's how SPLITWI$E works:\n\n1. **Select a market** (Jumia, Amazon, etc.)\n2. **Go to Map** — set your delivery radius\n3. **Go Live** — your pin appears on the map\n4. **Connect** — tap a nearby shopper's pin\n5. **Split** — share one delivery, divide the fee\n\nExample: ₦2,000 delivery ÷ 5 people = ₦400 each!";
 
   if (q.includes('save') || q.includes('discount') || q.includes('cheap') || q.includes('cost') || (q.includes('how') && q.includes('much')))
-    return "You can save **up to 80% on delivery fees!** 🎉\n\n| Group size | Delivery (₦2,000) |\n|------------|-------------------|\n| Solo       | ₦2,000            |\n| 2 people   | ₦1,000 each       |\n| 5 people   | ₦400 each         |\n| 10 people  | ₦200 each         |\n\nThe bigger the group, the more everyone saves!";
+    return "You can save **up to 80% on delivery fees!**\n\nGroup size | Delivery (₦2,000)\nSolo       | ₦2,000\n2 people   | ₦1,000 each\n5 people   | ₦400 each\n10 people  | ₦200 each\n\nThe bigger the group, the more everyone saves!";
 
   if (q.includes('go live') || q.includes('appear') || q.includes('show on map') || (q.includes('how') && q.includes('map')))
-    return "To appear on the map:\n\n1. Tap **Nearby Map** from the dashboard\n2. Select your market from the list\n3. Set your search radius (1–20km)\n4. Tap the **Go Live** button 🟢\n\nYou'll appear as a pin. Nearby shoppers from any market can see you and connect!";
+    return "To appear on the map:\n\n1. Tap **Map** from the bottom bar\n2. Select your market from the list\n3. Set your search radius (1–20km)\n4. Tap the **Go Live** button\n\nYou'll appear as a pin. Nearby shoppers from any market can see you and connect!";
 
   if (q.includes('radius') || q.includes('distance') || q.includes('km') || q.includes('area') || q.includes('range'))
     return "The **radius** controls how far away you can see other shoppers:\n\n• 1km — your immediate street\n• 3km — your neighbourhood (default)\n• 5–10km — your local area\n• 20km — across your city\n\nStart with 3km and expand if no one is nearby.";
 
   if (q.includes('group') || q.includes('create group') || q.includes('join') || q.includes('pool'))
-    return "To start a group:\n\n• **Map**: tap any shopper's pin → choose 'Create Group' or 'Private Chat'\n• **Group Orders**: tap '+ New Group' to create one manually\n\nGroups work best with **3–10 people**. The chat is where you coordinate what to order, then one person places the combined order. 👥";
+    return "To start a group:\n\n• **Map**: tap any shopper's pin → choose 'Create Group' or 'Private Chat'\n• **Groups** tab: tap '+ New Group' to create one manually\n\nGroups work best with **3–10 people**. The chat is where you coordinate what to order, then one person places the combined order.";
 
   if (q.includes('chat') || q.includes('message') || q.includes('talk') || q.includes('communicate'))
     return "SPLITWI$E has a built-in group chat for each order pool.\n\n• Tap a shopper pin on the map to open a chat\n• Use the **Chat** tab to see all your active conversations\n• Coordinate your orders, confirm items, then split the delivery fee once the order is placed.";
@@ -85,35 +89,32 @@ function getLocalResponse(question: string): string {
     return "SPLITWI$E handles **coordination, not payments**.\n\nAfter agreeing on the order, members pay each other directly via:\n• Bank transfer (GTBank, Access, Opay, etc.)\n• Cash\n• Mobile money\n\nUse the chat to confirm who paid and who owes what.";
 
   if (q.includes('delivery') || q.includes('ship') || q.includes('logistics'))
-    return "Delivery works like this:\n\n1. Your group places **one combined order** on the market (e.g. Jumia)\n2. Items are delivered to **one address** (or split by arrangement)\n3. The delivery fee is divided equally among group members\n\nThis beats paying full delivery alone every time! 📦";
+    return "Delivery works like this:\n\n1. Your group places **one combined order** on the market (e.g. Jumia)\n2. Items are delivered to **one address** (or split by arrangement)\n3. The delivery fee is divided equally among group members\n\nThis beats paying full delivery alone every time!";
 
-  if (q.includes('sign up') || q.includes('register') || q.includes('account') || q.includes('profile'))
-    return "To create an account:\n\n1. Open SPLITWI$E\n2. Tap **Get Started**\n3. Enter your email and create a password\n4. Complete your profile (name, avatar emoji, phone)\n\nYou're ready to start saving! 🎯";
+  if (q.includes('sign up') || q.includes('register') || q.includes('account'))
+    return "To create an account:\n\n1. Open SPLITWI$E\n2. Tap **Get Started**\n3. Enter your email and create a password\n4. Complete your profile (name, avatar, phone)\n\nYou're ready to start saving!";
 
   if (q.includes('profile') || q.includes('avatar') || q.includes('name') || q.includes('edit'))
-    return "To update your profile:\n\n• Tap the **Profile** option in the sidebar menu\n• Update your name, phone number, or avatar emoji\n\nYour name and emoji appear on the map so other shoppers can identify you!";
+    return "To update your profile:\n\n• Tap the **Profile** tab at the bottom\n• Update your name, phone number, or avatar\n\nYour name and avatar appear on the map so other shoppers can identify you!";
 
   if (q.includes('safe') || q.includes('trust') || q.includes('secure') || q.includes('private'))
-    return "SPLITWI$E is designed with safety in mind:\n\n🔒 Secure login via email/password\n🗺️ You control when you go live and offline\n💬 In-app chat keeps communication private\n🛡️ FCCPC support if any market scams you\n\nAlways use the in-app chat and never share personal financial details with strangers.";
+    return "SPLITWI$E is designed with safety in mind:\n\nSecure login via email/password or Google\nYou control when you go live and offline\nIn-app chat keeps communication private\nFCCPC support if any market scams you\n\nAlways use the in-app chat and never share personal financial details with strangers.";
 
   if (q.includes('offline') || q.includes('go offline') || q.includes('hide') || q.includes('stop'))
-    return "To go offline and hide from the map:\n\n• On the Map screen, tap **Go Offline**\n• Your pin is removed and you become invisible to other shoppers\n\nYou can go live again anytime you're ready to shop! 🔴";
-
-  if (q.includes('custom market') || q.includes('add market') || q.includes('other market') || q.includes('not listed'))
-    return "Don't see your market? **Add a custom one!**\n\n1. On the Map screen, tap the market selector\n2. Scroll down and tap **'+ Add Custom Market'**\n3. Type the market name and save\n\nYour custom market will appear on the map for others to join! ✨";
+    return "To go offline and hide from the map:\n\n• On the Map screen, tap **Go Offline**\n• Your pin is removed and you become invisible to other shoppers\n\nYou can go live again anytime you're ready to shop!";
 
   if (q.includes('nigeria') || q.includes('lagos') || q.includes('abuja') || q.includes('city') || q.includes('location'))
-    return "SPLITWI$E works **anywhere in Nigeria** 🇳🇬\n\nCurrently being used in Lagos, Abuja, Port Harcourt, and more cities. As long as you have nearby shoppers within your radius, you can form a group and save on delivery!";
+    return "SPLITWI$E works **anywhere in Nigeria**\n\nCurrently being used in Lagos, Abuja, Port Harcourt, and more cities. As long as you have nearby shoppers within your radius, you can form a group and save on delivery!";
 
   if (q.includes('tip') || q.includes('advice') || q.includes('trick') || q.includes('best'))
-    return "Top tips to save more with SPLITWI$E:\n\n💡 Use a **3-5km radius** for best results\n🕐 Go live during **peak hours** (evenings & weekends)\n👥 Invite friends to join your pool in advance\n📍 The closer your group, the faster the delivery\n🔄 Check back regularly — new shoppers appear often!";
+    return "Top tips to save more with SPLITWI$E:\n\nUse a **3-5km radius** for best results\nGo live during **peak hours** (evenings & weekends)\nInvite friends to join your pool in advance\nThe closer your group, the faster the delivery\nCheck back regularly — new shoppers appear often!";
 
-  return "I'm here to help with SPLITWI$E! 😊\n\nYou can ask me about:\n• **How group splitting works**\n• **Supported markets** (Jumia, Konga, etc.)\n• **Going live on the map**\n• **Saving on delivery fees**\n• **Reporting scams to FCCPC**\n• **Payment coordination**\n\nWhat would you like to know?";
+  return "I'm here to help with SPLITWI$E!\n\nYou can ask me about:\n• **How group splitting works**\n• **Supported markets** (Jumia, Konga, etc.)\n• **Going live on the map**\n• **Saving on delivery fees**\n• **Reporting scams to FCCPC**\n• **Payment coordination**\n\nWhat would you like to know?";
 }
 
 function AIChatbot({ onClose }: { onClose: () => void }) {
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'assistant', content: "Hi! 👋 I'm the SPLITWI$E assistant. I can help you understand how group ordering works, answer e-commerce questions, or help you save more on deliveries. What would you like to know?" }
+    { role: 'assistant', content: "Hi! I'm the SPLITWI$E assistant. I can help you understand how group ordering works, answer e-commerce questions, or help you save more on deliveries. What would you like to know?" }
   ]);
   const [input,   setInput]   = useState('');
   const [loading, setLoading] = useState(false);
@@ -209,43 +210,102 @@ function AIChatbot({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
+// BOTTOM TAB BAR
+// ══════════════════════════════════════════════════════════════════
+const TAB_ITEMS: { screen: ScreenName; icon: (a: boolean) => React.ReactNode; label: string }[] = [
+  { screen: 'Home',    icon: a => Icons.home(   a ? TEAL_DARK : MID, 22), label: 'Home'    },
+  { screen: 'Map',     icon: a => Icons.map(    a ? TEAL_DARK : MID, 22), label: 'Map'     },
+  { screen: 'Chat',    icon: a => Icons.chat(   a ? TEAL_DARK : MID, 22), label: 'Chat'    },
+  { screen: 'Groups',  icon: a => Icons.groups( a ? TEAL_DARK : MID, 22), label: 'Groups'  },
+  { screen: 'Profile', icon: a => Icons.profile(a ? TEAL_DARK : MID, 22), label: 'Profile' },
+];
+
+function BottomTabBar({ active, onPress }: {
+  active: ScreenName;
+  onPress: (s: ScreenName) => void;
+}) {
+  return (
+    <View style={tab.bar}>
+      {TAB_ITEMS.map(item => {
+        // FCCPC is a sub-page of Profile — keep Profile tab highlighted
+        const isActive = active === item.screen || (active === 'FCCPC' && item.screen === 'Profile');
+        return (
+          <TouchableOpacity
+            key={item.screen}
+            style={tab.item}
+            onPress={() => onPress(item.screen)}
+            activeOpacity={0.65}
+          >
+            {isActive && <View style={tab.activePill} />}
+            <View style={[tab.iconWrap, isActive && tab.iconWrapActive]}>
+              {item.icon(isActive)}
+            </View>
+            <Text style={[tab.label, isActive && tab.labelActive]}>{item.label}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════
 // HOME SCREEN
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 function HomeScreen({ profile, onNavigate }: {
   profile: any | null; email: string; onNavigate: (s: ScreenName) => void;
 }) {
   const [delivery, setDelivery] = useState(2000);
   const [people,   setPeople]   = useState(4);
+
+  // Green dot pulse
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  // Radar rings — 3 rings with staggered starts
+  const ring1 = useRef(new Animated.Value(0)).current;
+  const ring2 = useRef(new Animated.Value(0)).current;
+  const ring3 = useRef(new Animated.Value(0)).current;
 
   const hour      = new Date().getHours();
   const greeting  = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
   const firstName = profile?.display_name?.split(' ')[0] || profile?.first_name || 'Shopper';
 
-  const perPerson  = Math.round(delivery / people);
-  const savePct    = Math.round(((delivery - perPerson) / delivery) * 100);
+  const perPerson = Math.round(delivery / people);
+  const savePct   = Math.round(((delivery - perPerson) / delivery) * 100);
 
   const getInitials = () => {
     if (!profile) return '?';
     return `${profile.first_name?.[0] || ''}${profile.last_name?.[0] || ''}`.toUpperCase();
   };
 
-  // Pulse animation for the live indicator
   useEffect(() => {
+    // Pulsing green dot
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.5, duration: 900, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.8, duration: 900, useNativeDriver: true }),
         Animated.timing(pulseAnim, { toValue: 1,   duration: 900, useNativeDriver: true }),
       ])
     ).start();
+
+    // Radar rings — each ring expands and fades out, staggered 667ms apart
+    const animateRing = (val: Animated.Value, delay: number) => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(val, { toValue: 1, duration: 2000, useNativeDriver: true }),
+          Animated.timing(val, { toValue: 0, duration: 0,    useNativeDriver: true }),
+        ])
+      ).start();
+    };
+    animateRing(ring1, 0);
+    animateRing(ring2, 667);
+    animateRing(ring3, 1333);
   }, []);
 
   const actions = [
-    { icon: Icons.map(WHITE, 22),    label: 'Find Nearby',   sub: 'See shoppers on map',     bg: TEAL_DARK,  screen: 'Map'    as ScreenName },
-    { icon: Icons.chat(WHITE, 22),   label: 'My Chats',      sub: 'Chat with your groups',   bg: '#6D28D9',  screen: 'Chat'   as ScreenName },
-    { icon: Icons.groups(WHITE, 22), label: 'Group Orders',  sub: 'Pool & split orders',     bg: '#B45309',  screen: 'Groups' as ScreenName },
-    { icon: Icons.shield(WHITE, 22), label: 'Report Scam',   sub: 'FCCPC consumer help',     bg: '#C53030',  screen: 'FCCPC'  as ScreenName },
+    { icon: Icons.map(WHITE, 22),    label: 'Find Nearby',  sub: 'See shoppers on map',   bg: TEAL_DARK,  screen: 'Map'    as ScreenName },
+    { icon: Icons.chat(WHITE, 22),   label: 'My Chats',     sub: 'Coordinate with group', bg: '#6D28D9',  screen: 'Chat'   as ScreenName },
+    { icon: Icons.groups(WHITE, 22), label: 'Group Orders', sub: 'Pool & split orders',   bg: '#B45309',  screen: 'Groups' as ScreenName },
+    { icon: Icons.shield(WHITE, 22), label: 'Report Scam',  sub: 'FCCPC consumer help',   bg: '#C53030',  screen: 'FCCPC'  as ScreenName },
   ];
 
   const feeOptions = [500, 1000, 1500, 2000, 3000, 5000];
@@ -253,12 +313,13 @@ function HomeScreen({ profile, onNavigate }: {
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={hs.scroll} showsVerticalScrollIndicator={false}>
 
-      {/* ── Hero ─────────────────────────────────────────── */}
+      {/* ── Hero ─────────────────────────────────────────────── */}
       <View style={hs.hero}>
-        {/* Top row: greeting + avatar */}
+
+        {/* Greeting row */}
         <View style={hs.heroTop}>
           <View style={{ flex: 1 }}>
-            <Text style={hs.heroGreeting}>Good {greeting} 👋</Text>
+            <Text style={hs.heroGreeting}>Good {greeting}</Text>
             <Text style={hs.heroName}>{firstName}</Text>
           </View>
           <View style={hs.avatarWrap}>
@@ -271,44 +332,71 @@ function HomeScreen({ profile, onNavigate }: {
           </View>
         </View>
 
-        {/* Tagline */}
         <Text style={hs.heroTagline}>Find shoppers near you — split delivery fees together.</Text>
 
-        {/* CTA */}
-        <TouchableOpacity style={hs.heroBtn} onPress={() => onNavigate('Map')} activeOpacity={0.85}>
-          <Animated.View style={[hs.heroBtnPulse, { transform: [{ scale: pulseAnim }] }]} />
-          <View style={hs.heroBtnDot} />
-          <Text style={hs.heroBtnTxt}>Go Live on Map</Text>
-          {Icons.map(WHITE, 17)}
-        </TouchableOpacity>
-      </View>
+        {/* Radar animation + Go Live CTA */}
+        <View style={hs.radarContainer}>
+          {/* Concentric rings that emanate outward */}
+          {[ring1, ring2, ring3].map((r, i) => (
+            <Animated.View
+              key={i}
+              pointerEvents="none"
+              style={[hs.radarRing, {
+                opacity: r.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 0.45, 0] }),
+                transform: [{
+                  scale: r.interpolate({ inputRange: [0, 1], outputRange: [0.15, 3.2] }),
+                }],
+              }]}
+            />
+          ))}
 
-      {/* ── Quick actions 2 × 2 ──────────────────────────── */}
-      <View style={hs.grid}>
-        {actions.map((a, i) => (
-          <TouchableOpacity key={i} style={[hs.actionCard, { backgroundColor: a.bg }]}
-            onPress={() => onNavigate(a.screen)} activeOpacity={0.82}>
-            <View style={hs.actionIconWrap}>{a.icon}</View>
-            <Text style={hs.actionLabel}>{a.label}</Text>
-            <Text style={hs.actionSub}>{a.sub}</Text>
+          <TouchableOpacity style={hs.heroBtn} onPress={() => onNavigate('Map')} activeOpacity={0.85}>
+            {/* Pulsing halo behind the green dot */}
+            <Animated.View style={[hs.heroBtnPulse, { transform: [{ scale: pulseAnim }] }]} />
+            <View style={hs.heroBtnDot} />
+            <Text style={hs.heroBtnTxt}>Go Live on Map</Text>
+            {Icons.map(WHITE, 18)}
           </TouchableOpacity>
-        ))}
+        </View>
       </View>
 
-      {/* ── Savings calculator ───────────────────────────── */}
+      {/* ── Quick actions 2 × 2 ──────────────────────────────── */}
+      <View style={hs.gridWrapper}>
+        <View style={hs.grid}>
+          {actions.map((a, i) => (
+            <TouchableOpacity
+              key={i}
+              style={[hs.actionCard, { backgroundColor: a.bg, width: CARD_W }]}
+              onPress={() => onNavigate(a.screen)}
+              activeOpacity={0.82}
+            >
+              <View style={hs.actionIconWrap}>{a.icon}</View>
+              <Text style={hs.actionLabel}>{a.label}</Text>
+              <Text style={hs.actionSub}>{a.sub}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* ── Savings calculator ───────────────────────────────── */}
       <View style={hs.calcCard}>
         <View style={hs.calcHeader}>
-          <Text style={hs.calcTitle}>💰 Savings Calculator</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            {Icons.savings(TEAL_DARK, 20)}
+            <Text style={hs.calcTitle}>Savings Calculator</Text>
+          </View>
           <Text style={hs.calcSub}>See how much your group saves</Text>
         </View>
 
-        {/* Delivery fee chips */}
+        {/* Fee chips */}
         <Text style={hs.calcLabel}>Delivery fee</Text>
         <View style={hs.chipRow}>
           {feeOptions.map(v => (
-            <TouchableOpacity key={v}
+            <TouchableOpacity
+              key={v}
               style={[hs.chip, delivery === v && hs.chipActive]}
-              onPress={() => setDelivery(v)}>
+              onPress={() => setDelivery(v)}
+            >
               <Text style={[hs.chipTxt, delivery === v && hs.chipTxtActive]}>
                 ₦{v >= 1000 ? `${v / 1000}k` : v}
               </Text>
@@ -317,18 +405,16 @@ function HomeScreen({ profile, onNavigate }: {
         </View>
 
         {/* People counter */}
-        <Text style={[hs.calcLabel, { marginTop: 16 }]}>People in group</Text>
+        <Text style={[hs.calcLabel, { marginTop: 18 }]}>People in group</Text>
         <View style={hs.counterRow}>
-          <TouchableOpacity style={hs.counterBtn}
-            onPress={() => setPeople(p => Math.max(2, p - 1))} activeOpacity={0.7}>
+          <TouchableOpacity style={hs.counterBtn} onPress={() => setPeople(p => Math.max(2, p - 1))} activeOpacity={0.7}>
             <Text style={hs.counterBtnTxt}>−</Text>
           </TouchableOpacity>
           <View style={hs.counterValWrap}>
             <Text style={hs.counterVal}>{people}</Text>
             <Text style={hs.counterValLbl}>people</Text>
           </View>
-          <TouchableOpacity style={hs.counterBtn}
-            onPress={() => setPeople(p => Math.min(20, p + 1))} activeOpacity={0.7}>
+          <TouchableOpacity style={hs.counterBtn} onPress={() => setPeople(p => Math.min(20, p + 1))} activeOpacity={0.7}>
             <Text style={hs.counterBtnTxt}>+</Text>
           </TouchableOpacity>
         </View>
@@ -349,16 +435,20 @@ function HomeScreen({ profile, onNavigate }: {
         </TouchableOpacity>
       </View>
 
-      <View style={{ height: 120 }} />
+      <View style={{ height: 32 }} />
     </ScrollView>
   );
 }
 
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 // PROFILE SCREEN
-// ══════════════════════════════════════════════════════════════
-function ProfileScreen({ profile, email, onSignOut, onEditProfile }: {
-  profile: any | null; email: string; onSignOut: () => void; onEditProfile?: () => void;
+// ══════════════════════════════════════════════════════════════════
+function ProfileScreen({ profile, email, onSignOut, onEditProfile, onNavigateFCCPC }: {
+  profile: any | null;
+  email: string;
+  onSignOut: () => void;
+  onEditProfile?: () => void;
+  onNavigateFCCPC?: () => void;
 }) {
   const getInitials = () => {
     if (!profile) return '??';
@@ -436,7 +526,7 @@ function ProfileScreen({ profile, email, onSignOut, onEditProfile }: {
                 <View style={{flexDirection:'row',alignItems:'center',gap:3}}>
                   {item.done ? Icons.check('#276749',11) : null}
                   <Text style={[s.verifyPillTxt,{color:item.done?'#276749':'#B7791F'}]}>
-                    {item.done?'Verified':'⏳ Pending'}
+                    {item.done?'Verified':'Pending'}
                   </Text>
                 </View>
               </View>
@@ -446,83 +536,66 @@ function ProfileScreen({ profile, email, onSignOut, onEditProfile }: {
         ))}
       </View>
 
+      {/* FCCPC / Report a Scam */}
+      {onNavigateFCCPC && (
+        <TouchableOpacity style={s.fccpcCard} onPress={onNavigateFCCPC} activeOpacity={0.8}>
+          <View style={s.fccpcIconWrap}>
+            {Icons.shield('#C53030', 20)}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.fccpcCardTitle}>Report a Scam</Text>
+            <Text style={s.fccpcCardSub}>FCCPC Consumer Protection</Text>
+          </View>
+          <Text style={s.fccpcArrow}>›</Text>
+        </TouchableOpacity>
+      )}
+
       <TouchableOpacity style={s.signOutBtn} onPress={onSignOut}>
         <View style={{flexDirection:'row',alignItems:'center',gap:8}}>
           {Icons.signout(MID,18)}
           <Text style={s.signOutTxt}>Sign Out</Text>
         </View>
       </TouchableOpacity>
-      <View style={{height:100}}/>
+      <View style={{height:32}}/>
     </ScrollView>
   );
 }
 
-// ══════════════════════════════════════════════════════════════
-// NAV ITEMS
-// ══════════════════════════════════════════════════════════════
-const navItems: { screen: ScreenName; icon: (active: boolean) => any; label: string; accent?: string }[] = [
-  { screen:'Home',    icon: a => Icons.home(   a?TEAL_DARK:MID, 18), label:'Home'            },
-  { screen:'Map',     icon: a => Icons.map(    a?TEAL_DARK:MID, 18), label:'Nearby Map'      },
-  { screen:'Groups',  icon: a => Icons.groups( a?TEAL_DARK:MID, 18), label:'Group Orders'    },
-  { screen:'Chat',    icon: a => Icons.chat(   a?TEAL_DARK:MID, 18), label:'Chats'           },
-  { screen:'Profile', icon: a => Icons.profile(a?TEAL_DARK:MID, 18), label:'My Profile'      },
-  { screen:'FCCPC',   icon: a => Icons.shield( a?'#C53030':'#E53E3E', 18), label:'Report a Scam', accent:'#C53030' },
-];
-
-// ══════════════════════════════════════════════════════════════
-// DRAWER NAVIGATOR
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
+// TAB NAVIGATOR  (replaces DrawerNavigator)
+// ══════════════════════════════════════════════════════════════════
 interface DrawerProps { onSignOut: () => void; onEditProfile?: () => void; }
 
 export default function DrawerNavigator({ onSignOut, onEditProfile }: DrawerProps) {
   const [activeScreen,  setActiveScreen]  = useState<ScreenName>('Home');
-  const [drawerOpen,    setDrawerOpen]    = useState(false);
   const [profile,       setProfile]       = useState<any|null>(null);
   const [email,         setEmail]         = useState('');
   const [activeChatId,  setActiveChatId]  = useState<string|undefined>(undefined);
   const [botOpen,       setBotOpen]       = useState(false);
-  const botAnim     = useRef(new Animated.Value(0)).current;
-  const drawerAnim  = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
-  const overlayAnim = useRef(new Animated.Value(0)).current;
+  const botAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => { loadProfile(); }, []);
 
   const loadProfile = async () => {
-    const { data:{ user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setEmail(user.email || '');
     const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
     if (data) setProfile(data);
   };
 
-  const openDrawer = () => {
-    setDrawerOpen(true);
-    Animated.parallel([
-      Animated.spring(drawerAnim,  { toValue:0, useNativeDriver:true, tension:65, friction:11 }),
-      Animated.timing(overlayAnim, { toValue:1, duration:250, useNativeDriver:true }),
-    ]).start();
-  };
-
-  const closeDrawer = () => {
-    Animated.parallel([
-      Animated.spring(drawerAnim,  { toValue:-DRAWER_WIDTH, useNativeDriver:true, tension:65, friction:11 }),
-      Animated.timing(overlayAnim, { toValue:0, duration:200, useNativeDriver:true }),
-    ]).start(() => setDrawerOpen(false));
-  };
-
   const navigate = (screen: ScreenName) => {
-    if (screen === 'Chat') setActiveChatId(undefined); // always show chat list, not last opened chat
+    if (screen === 'Chat') setActiveChatId(undefined);
     setActiveScreen(screen);
-    closeDrawer();
   };
 
   const toggleBot = () => {
     if (botOpen) {
-      Animated.timing(botAnim, { toValue:0, duration:200, useNativeDriver:true })
+      Animated.timing(botAnim, { toValue: 0, duration: 200, useNativeDriver: true })
         .start(() => setBotOpen(false));
     } else {
       setBotOpen(true);
-      Animated.spring(botAnim, { toValue:1, useNativeDriver:true, tension:80, friction:10 }).start();
+      Animated.spring(botAnim, { toValue: 1, useNativeDriver: true, tension: 80, friction: 10 }).start();
     }
   };
 
@@ -538,146 +611,89 @@ export default function DrawerNavigator({ onSignOut, onEditProfile }: DrawerProp
     return `${profile.first_name?.[0]||''}${profile.last_name?.[0]||''}`.toUpperCase();
   };
 
-  const screenTitles: Record<ScreenName,string> = {
-    Home:'Dashboard', Map:'Nearby Map', Groups:'Group Orders',
-    Chat:'Chats', Profile:'My Profile', FCCPC:'Consumer Protection',
+  const screenTitles: Record<ScreenName, string> = {
+    Home: 'Dashboard', Map: 'Nearby Map', Groups: 'Group Orders',
+    Chat: 'Chats', Profile: 'My Profile', FCCPC: 'Consumer Protection',
   };
 
-  const botScale   = botAnim.interpolate({ inputRange:[0,1], outputRange:[0.85,1] });
+  const botScale   = botAnim.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] });
   const botOpacity = botAnim;
-  const botTransY  = botAnim.interpolate({ inputRange:[0,1], outputRange:[20,0] });
-
-  // Shared sidebar contents
-  const SidebarContents = () => (
-    <>
-      <View style={s.drawerHeader}>
-        <View style={s.drawerMapBg}>
-          {Array.from({length:8}).map((_,i)=>(
-            <View key={`h${i}`} style={[s.dgH,{top:`${(i/8)*100}%` as any}]}/>
-          ))}
-          <View style={s.drawerFrost}/>
-        </View>
-        <View style={s.drawerAvatar}>
-          {profile?.avatar_emoji?.startsWith?.('http')
-            ? <Image source={{ uri: profile.avatar_emoji }} style={s.drawerAvatarImg} />
-            : (profile?.avatar_emoji && profile.avatar_emoji.length <= 4
-                ? <Text style={{fontSize:30}}>{profile.avatar_emoji}</Text>
-                : <Text style={s.drawerAvatarTxt}>{getInitials()}</Text>
-              )
-          }
-        </View>
-        <Text style={s.drawerName}>{profile?.display_name||`${profile?.first_name||''} ${profile?.last_name||''}`}</Text>
-        <Text style={s.drawerEmail}>{email}</Text>
-        <View style={s.drawerBadge}><Text style={s.drawerBadgeTxt}>Active</Text></View>
-      </View>
-
-      <ScrollView style={s.drawerNav} showsVerticalScrollIndicator={false}>
-        {navItems.map((item) => {
-          const isActive = activeScreen === item.screen;
-          const isRed = item.screen === 'FCCPC';
-          return (
-            <TouchableOpacity key={item.screen}
-              style={[s.navItem, isActive && (isRed ? s.navItemActiveRed : s.navItemActive)]}
-              onPress={() => navigate(item.screen)}>
-              <View style={[s.navIconBox, isActive && {backgroundColor: isRed ? '#C5303018' : TEAL+'18'}]}>
-                {item.icon(isActive)}
-              </View>
-              <Text style={[s.navLabel, isActive && (isRed ? s.navLabelActiveRed : s.navLabelActive)]}>
-                {item.label}
-              </Text>
-              {isActive && <View style={[s.navActiveBar, isRed && {backgroundColor:'#C53030'}]}/>}
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
-      <View style={s.drawerFooter}>
-        <TouchableOpacity style={s.drawerSignOut} onPress={handleSignOut}>
-          {Icons.signout(MID, 16)}
-          <Text style={s.drawerSignOutTxt}>Sign Out</Text>
-        </TouchableOpacity>
-        <Text style={s.drawerVersion}>SPLITWI$E v1.0.0</Text>
-      </View>
-    </>
-  );
+  const botTransY  = botAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] });
 
   return (
     <View style={s.root}>
-      <View style={s.main}>
-        {/* Top bar */}
-        <View style={s.topBar}>
-          {activeScreen !== 'Home' ? (
-            <TouchableOpacity onPress={() => navigate('Home')} style={s.backBtn}>
-              <Text style={s.backBtnTxt}>← Back</Text>
-            </TouchableOpacity>
+
+      {/* ── Top bar ────────────────────────────────────────── */}
+      <View style={s.topBar}>
+        {/* Spacer matches avatar width for symmetric centering */}
+        <View style={s.topBarSpacer} />
+
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          {activeScreen === 'Home' ? (
+            <Text style={s.topBarLogo}>
+              SPLITWI<Text style={{ color: TEAL_DARK }}>$</Text>E
+            </Text>
           ) : (
-            <TouchableOpacity onPress={openDrawer} style={s.menuBtn}>
-              <View style={s.menuLine}/>
-              <View style={[s.menuLine,{width:18}]}/>
-              <View style={s.menuLine}/>
-            </TouchableOpacity>
+            <Text style={s.topBarTitle}>{screenTitles[activeScreen]}</Text>
           )}
-          <Text style={s.topBarTitle}>{screenTitles[activeScreen]}</Text>
-          <View style={s.topBarRight}>
-            {activeScreen !== 'Home' ? (
-              <TouchableOpacity onPress={openDrawer} style={s.menuBtn}>
-                <View style={s.menuLine}/>
-                <View style={[s.menuLine,{width:18}]}/>
-                <View style={s.menuLine}/>
-              </TouchableOpacity>
-            ) : (
-              <Text style={s.topBarLogo}>SPLITWI<Text style={{color:TEAL_DARK}}>$</Text>E</Text>
-            )}
-          </View>
         </View>
 
-        {/* Screens */}
-        <View style={s.screenContent}>
-          {activeScreen === 'Home' && (
-            <HomeScreen profile={profile} email={email} onNavigate={navigate}/>
-          )}
-          {activeScreen === 'Map' && (
-            <MapScreenComponent onOpenChat={handleOpenChat}/>
-          )}
-          {activeScreen === 'Groups' && (
-            <GroupOrdersScreen onOpenChat={handleOpenChat}/>
-          )}
-          {activeScreen === 'Chat' && (
-            <ChatScreen groupId={activeChatId}/>
-          )}
-          {activeScreen === 'Profile' && (
-            <ProfileScreen profile={profile} email={email} onSignOut={handleSignOut} onEditProfile={onEditProfile}/>
-          )}
-          {activeScreen === 'FCCPC' && (
-            <FCCPCScreen/>
-          )}
-        </View>
+        {/* Avatar → Profile */}
+        <TouchableOpacity
+          onPress={() => navigate('Profile')}
+          style={s.topBarAvatarBtn}
+          activeOpacity={0.8}
+        >
+          {profile?.avatar_emoji?.startsWith?.('http')
+            ? <Image source={{ uri: profile.avatar_emoji }} style={s.topBarAvatarImg} />
+            : profile?.avatar_emoji && profile.avatar_emoji.length <= 4
+              ? <Text style={{ fontSize: 18 }}>{profile.avatar_emoji}</Text>
+              : <Text style={s.topBarAvatarTxt}>{getInitials()}</Text>
+          }
+        </TouchableOpacity>
       </View>
 
-      {/* Drawer overlay */}
-      {drawerOpen && (
-        <Animated.View style={[s.overlay,{opacity:overlayAnim}]} pointerEvents="auto">
-          <TouchableOpacity style={{flex:1}} onPress={closeDrawer} activeOpacity={1}/>
-        </Animated.View>
-      )}
+      {/* ── Screen content ─────────────────────────────────── */}
+      <View style={s.screenContent}>
+        {activeScreen === 'Home' && (
+          <HomeScreen profile={profile} email={email} onNavigate={navigate} />
+        )}
+        {activeScreen === 'Map' && (
+          <MapScreenComponent onOpenChat={handleOpenChat} />
+        )}
+        {activeScreen === 'Groups' && (
+          <GroupOrdersScreen onOpenChat={handleOpenChat} />
+        )}
+        {activeScreen === 'Chat' && (
+          <ChatScreen groupId={activeChatId} />
+        )}
+        {activeScreen === 'Profile' && (
+          <ProfileScreen
+            profile={profile}
+            email={email}
+            onSignOut={handleSignOut}
+            onEditProfile={onEditProfile}
+            onNavigateFCCPC={() => navigate('FCCPC')}
+          />
+        )}
+        {activeScreen === 'FCCPC' && <FCCPCScreen />}
+      </View>
 
-      {/* Sliding drawer */}
-      <Animated.View style={[s.drawer,{transform:[{translateX:drawerAnim}]}]}>
-        <SidebarContents/>
-      </Animated.View>
+      {/* ── Bottom tab bar ─────────────────────────────────── */}
+      <BottomTabBar active={activeScreen} onPress={navigate} />
 
-      {/* Floating AI Chatbot */}
+      {/* ── Floating AI Chatbot ────────────────────────────── */}
       {botOpen && (
-        <Animated.View style={[s.botWindow,{
+        <Animated.View style={[s.botWindow, {
           opacity: botOpacity,
           transform: [{ scale: botScale }, { translateY: botTransY }],
         }]}>
-          <AIChatbot onClose={toggleBot}/>
+          <AIChatbot onClose={toggleBot} />
         </Animated.View>
       )}
 
-      {/* FAB — dashboard only */}
-      {activeScreen === 'Home' && <TouchableOpacity style={s.botFab} onPress={toggleBot} activeOpacity={0.85}>
+      {/* FAB — visible on all screens */}
+      <TouchableOpacity style={s.botFab} onPress={toggleBot} activeOpacity={0.85}>
         <View style={s.botFabInner}>
           {botOpen ? Icons.close(WHITE, 20) : Icons.bot(WHITE, 22)}
         </View>
@@ -686,126 +702,49 @@ export default function DrawerNavigator({ onSignOut, onEditProfile }: DrawerProp
             <Text style={s.botFabBadgeTxt}>AI</Text>
           </View>
         )}
-      </TouchableOpacity>}
+      </TouchableOpacity>
     </View>
   );
 }
 
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 // STYLES
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 const s = StyleSheet.create({
-  root: { flex:1, backgroundColor:BG },
+  root: { flex: 1, backgroundColor: BG },
 
-  // Web layout
-  mapBg:  { position:'absolute',top:0,left:0,right:0,bottom:0,backgroundColor:'#F0FCFC',overflow:'hidden' },
-  gH:     { position:'absolute',left:0,right:0,height:1,backgroundColor:'#17B8B80E' },
-  gV:     { position:'absolute',top:0,bottom:0,width:1,backgroundColor:'#17B8B809' },
-  pin:    { position:'absolute',width:20,height:20,alignItems:'center',justifyContent:'center' },
-  pinR:   { position:'absolute',width:16,height:16,borderRadius:8,borderWidth:1,borderColor:TEAL+'22' },
-  pinD:   { width:6,height:6,borderRadius:3,backgroundColor:TEAL+'40',borderWidth:1,borderColor:WHITE },
-  frost:  { position:'absolute',top:0,left:0,right:0,bottom:0,backgroundColor:'#F8FEFEFD' },
-  wm:     { position:'absolute',alignSelf:'center',top:'18%',fontSize:Platform.OS==='web'?120:68,fontWeight:'900',color:TEAL+'07',letterSpacing:-4,textAlign:'center',width:'100%',zIndex:0 },
+  // Watermark (profile screen)
+  wm: { position:'absolute',alignSelf:'center',top:'18%',fontSize:Platform.OS==='web'?120:68,fontWeight:'900',color:TEAL+'07',letterSpacing:-4,textAlign:'center',width:'100%',zIndex:0 },
 
-  main:          { flex:1 },
-  topBar:        { flexDirection:'row',alignItems:'center',paddingHorizontal:20,paddingTop:Platform.OS==='web'?14:Platform.OS==='ios'?54:40,paddingBottom:14,backgroundColor:WHITE,borderBottomWidth:1,borderBottomColor:LIGHT_BORDER,zIndex:10,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:3 },
-  menuBtn:       { gap:5,padding:4 },
-  backBtn:       { paddingVertical:6,paddingRight:10 },
-  backBtnTxt:    { color:TEAL_DARK,fontSize:14,fontWeight:'800' },
-  menuLine:      { width:22,height:2.5,borderRadius:2,backgroundColor:DARK },
-  topBarTitle:   { flex:1,textAlign:'center',fontSize:16,fontWeight:'800',color:DARK,letterSpacing:0.3 },
-  topBarRight:   { minWidth:80,alignItems:'flex-end' },
-  topBarLogo:    { fontSize:13,fontWeight:'900',color:DARK,letterSpacing:1 },
-  screenContent: { flex:1 },
-  overlay:       { position:'absolute',top:0,left:0,right:0,bottom:0,backgroundColor:'rgba(6,32,32,0.45)',zIndex:20 },
+  // Top bar
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'web' ? 14 : Platform.OS === 'ios' ? 54 : 40,
+    paddingBottom: 12,
+    backgroundColor: WHITE,
+    borderBottomWidth: 1,
+    borderBottomColor: LIGHT_BORDER,
+    zIndex: 10,
+    shadowColor: TEAL,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  topBarSpacer:     { width: 40 },
+  topBarLogo:       { fontSize: 15, fontWeight: '900', color: DARK, letterSpacing: 1.5 },
+  topBarTitle:      { fontSize: 15, fontWeight: '800', color: DARK },
+  topBarAvatarBtn:  { width: 38, height: 38, borderRadius: 19, backgroundColor: TEAL + '18', borderWidth: 1.5, borderColor: TEAL + '44', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  topBarAvatarImg:  { width: 38, height: 38, borderRadius: 19 },
+  topBarAvatarTxt:  { fontSize: 13, fontWeight: '900', color: TEAL_DARK },
 
-  drawer:          { position:'absolute',top:0,left:0,bottom:0,width:DRAWER_WIDTH,backgroundColor:WHITE,zIndex:30,shadowColor:'#000',shadowOffset:{width:4,height:0},shadowOpacity:0.15,shadowRadius:20,elevation:20 },
-  drawerHeader:    { paddingTop:Platform.OS==='web'?24:Platform.OS==='ios'?54:40,paddingBottom:24,paddingHorizontal:24,backgroundColor:TEAL_DEEP,overflow:'hidden' },
-  drawerMapBg:     { position:'absolute',top:0,left:0,right:0,bottom:0,overflow:'hidden' },
-  dgH:             { position:'absolute',left:0,right:0,height:1,backgroundColor:'#FFFFFF15' },
-  drawerFrost:     { position:'absolute',top:0,left:0,right:0,bottom:0,backgroundColor:'#0A6E6E88' },
-  drawerAvatar:    { width:64,height:64,borderRadius:32,backgroundColor:WHITE+'33',borderWidth:2,borderColor:WHITE+'66',alignItems:'center',justifyContent:'center',marginBottom:12,overflow:'hidden' },
-  drawerAvatarTxt: { fontSize:22,fontWeight:'900',color:WHITE },
-  drawerAvatarImg: { width:64,height:64,borderRadius:32 },
-  drawerName:      { fontSize:17,fontWeight:'800',color:WHITE,marginBottom:3 },
-  drawerEmail:     { fontSize:12,color:WHITE+'BB',marginBottom:10 },
-  drawerBadge:     { backgroundColor:WHITE+'22',paddingHorizontal:10,paddingVertical:4,borderRadius:12,alignSelf:'flex-start' },
-  drawerBadgeTxt:  { fontSize:11,color:WHITE,fontWeight:'600' },
-  drawerNav:       { flex:1,paddingVertical:12 },
-  navItem:         { flexDirection:'row',alignItems:'center',paddingHorizontal:16,paddingVertical:13,gap:12,position:'relative' },
-  navItemActive:   { backgroundColor:TEAL+'08' },
-  navIconBox:      { width:34,height:34,borderRadius:8,alignItems:'center',justifyContent:'center',backgroundColor:TEAL+'08' },
-  navLabel:        { fontSize:14,fontWeight:'600',color:MID },
-  navLabelActive:      { color:TEAL_DEEP,fontWeight:'800' },
-  navItemActiveRed:    { backgroundColor:'#C5303008' },
-  navLabelActiveRed:   { color:'#C53030',fontWeight:'800' },
-  navActiveBar:    { position:'absolute',left:0,top:8,bottom:8,width:3,borderRadius:2,backgroundColor:TEAL_DARK },
-  drawerFooter:    { padding:20,borderTopWidth:1,borderTopColor:LIGHT_BORDER },
-  drawerSignOut:   { flexDirection:'row',alignItems:'center',gap:10,paddingVertical:12,paddingHorizontal:16,borderRadius:10,borderWidth:1,borderColor:LIGHT_BORDER,marginBottom:12 },
-  drawerSignOutTxt:{ fontSize:14,fontWeight:'700',color:MID },
-  drawerVersion:   { fontSize:11,color:MID,textAlign:'center' },
+  // Screen content
+  screenContent: { flex: 1 },
 
-  homeScroll:    { paddingBottom:40 },
-  heroCard:      { margin:16,marginTop:20,padding:22,backgroundColor:TEAL_DEEP,borderRadius:20,flexDirection:'row',alignItems:'center',justifyContent:'space-between',shadowColor:TEAL_DEEP,shadowOffset:{width:0,height:6},shadowOpacity:0.3,shadowRadius:16,elevation:6 },
-  heroLeft:      { flex:1 },
-  heroGreeting:  { fontSize:13,color:WHITE+'99',fontWeight:'500',marginBottom:2 },
-  heroName:      { fontSize:22,fontWeight:'900',color:WHITE,marginBottom:4 },
-  heroSub:       { fontSize:12,color:WHITE+'BB',marginBottom:14 },
-  heroBtn:       { backgroundColor:WHITE+'22',paddingHorizontal:14,paddingVertical:8,borderRadius:20,borderWidth:1,borderColor:WHITE+'33',alignSelf:'flex-start' },
-  heroBtnTxt:    { color:WHITE,fontSize:12,fontWeight:'700' },
-  heroAvatar:    { width:56,height:56,borderRadius:28,backgroundColor:WHITE+'22',borderWidth:2,borderColor:WHITE+'44',alignItems:'center',justifyContent:'center',marginLeft:12,overflow:'hidden' },
-  heroAvatarTxt: { fontSize:20,fontWeight:'900',color:WHITE },
-  heroAvatarImg: { width:56,height:56,borderRadius:28 },
-
-  statsRow:     { flexDirection:'row',gap:10,marginHorizontal:16,marginBottom:16 },
-  statCard:     { flex:1,backgroundColor:WHITE,borderRadius:14,padding:14,alignItems:'center',borderWidth:1,borderColor:LIGHT_BORDER,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:2 },
-  statIconWrap: { width:32,height:32,borderRadius:8,backgroundColor:TEAL+'10',alignItems:'center',justifyContent:'center',marginBottom:6 },
-  statNum:      { fontSize:20,fontWeight:'900',marginBottom:3 },
-  statLbl:      { fontSize:9,color:MID,textAlign:'center',fontWeight:'500',lineHeight:13 },
-  sectionHead:  { fontSize:15,fontWeight:'800',color:DARK,marginHorizontal:16,marginBottom:10,marginTop:6 },
-
-  quickGrid:    { flexDirection:'row',flexWrap:'wrap',gap:10,marginHorizontal:16,marginBottom:16 },
-  quickCard:    { width:'47%',borderRadius:16,padding:16,alignItems:'center',gap:6,borderWidth:1,borderColor:LIGHT_BORDER },
-  quickIconBox: { width:50,height:50,borderRadius:14,backgroundColor:WHITE+'88',alignItems:'center',justifyContent:'center',borderWidth:1,marginBottom:2 },
-  quickLbl:     { fontSize:13,fontWeight:'800',textAlign:'center',lineHeight:17 },
-  quickSublbl:  { fontSize:10,textAlign:'center',lineHeight:14 },
-
-  activityCard:      { marginHorizontal:16,marginBottom:10,backgroundColor:WHITE,borderRadius:14,overflow:'hidden',borderWidth:1,borderColor:LIGHT_BORDER,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:2 },
-  activityEmpty:     { flexDirection:'row',alignItems:'center',gap:12,padding:16 },
-  activityEmptyIcon: { width:40,height:40,borderRadius:10,backgroundColor:TEAL+'10',alignItems:'center',justifyContent:'center' },
-  activityTitle:     { fontSize:13,fontWeight:'700',color:DARK,marginBottom:2 },
-  activitySub:       { fontSize:11,color:MID },
-  joinBtn:           { backgroundColor:TEAL+'15',paddingHorizontal:12,paddingVertical:7,borderRadius:8,borderWidth:1,borderColor:TEAL+'40' },
-  joinBtnTxt:        { color:TEAL_DEEP,fontSize:12,fontWeight:'700' },
-
-  howCard:    { marginHorizontal:16,marginBottom:16,backgroundColor:WHITE,borderRadius:14,padding:16,borderWidth:1,borderColor:LIGHT_BORDER,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:2 },
-  howRow:     { flexDirection:'row',alignItems:'flex-start',gap:14,paddingVertical:12 },
-  howStep:    { width:32,height:32,borderRadius:16,backgroundColor:TEAL_DARK,alignItems:'center',justifyContent:'center',marginTop:2 },
-  howTitle:   { fontSize:13,fontWeight:'800',color:DARK,marginBottom:3 },
-  howDesc:    { fontSize:12,color:MID,lineHeight:18 },
-
-  tipsScroll:   { paddingHorizontal:16,paddingBottom:4 },
-  tipCard:      { width:200,backgroundColor:WHITE,borderRadius:14,padding:16,marginRight:10,borderWidth:1,borderColor:LIGHT_BORDER,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:2 },
-  tipIconWrap:  { width:40,height:40,borderRadius:10,backgroundColor:TEAL+'10',alignItems:'center',justifyContent:'center',marginBottom:10 },
-  tipTxt:       { fontSize:12,color:MID,lineHeight:18 },
-
-  marketsMarqueeWrap: { marginHorizontal:16,marginBottom:16,backgroundColor:WHITE,borderRadius:14,paddingVertical:14,borderWidth:1,borderColor:LIGHT_BORDER,overflow:'hidden' },
-  marketsMarqueeRow:  { flexDirection:'row',alignItems:'center',gap:8,paddingHorizontal:8 },
-  marketPill:       { flexDirection:'row',alignItems:'center',gap:5,paddingHorizontal:12,paddingVertical:7,borderRadius:20,backgroundColor:TEAL+'12',borderWidth:1,borderColor:TEAL+'30' },
-  marketPillIcon:   { width:16,height:16,alignItems:'center',justifyContent:'center' },
-  marketPillTxt:    { fontSize:12,fontWeight:'600',color:TEAL_DEEP },
-  marketPillMore:   { backgroundColor:'#F0FCFC',borderColor:TEAL+'20',borderStyle:'dashed' as any },
-  marketPillMoreTxt:{ fontSize:12,fontWeight:'600',color:MID,fontStyle:'italic' as any },
-
-  verifyCard:    { marginHorizontal:16,marginBottom:24,backgroundColor:WHITE,borderRadius:14,padding:16,borderWidth:1,borderColor:LIGHT_BORDER,shadowColor:TEAL,shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:2 },
-  verifyRow:     { flexDirection:'row',alignItems:'center',paddingVertical:10 },
-  verifyLabel:   { fontSize:12,color:MID,fontWeight:'500',width:60 },
-  verifyValue:   { flex:1,fontSize:12,color:DARK,fontWeight:'600',marginHorizontal:8 },
-  verifyPill:    { paddingHorizontal:8,paddingVertical:4,borderRadius:10,borderWidth:1 },
-  verifyPillTxt: { fontSize:10,fontWeight:'700' },
-  divider:       { height:1,backgroundColor:LIGHT_BORDER },
-
-  profileScroll:    { paddingBottom:40 },
+  // Profile screen
+  profileScroll:    { paddingBottom: 40 },
   profileHero:      { alignItems:'center',paddingTop:32,paddingBottom:24,marginHorizontal:16,marginBottom:16,backgroundColor:WHITE,borderRadius:20,borderWidth:1,borderColor:LIGHT_BORDER,shadowColor:TEAL,shadowOffset:{width:0,height:4},shadowOpacity:0.08,shadowRadius:16,elevation:4 },
   profileAvatar:        { width:88,height:88,borderRadius:44,overflow:'hidden',alignItems:'center',justifyContent:'center',marginBottom:12 },
   profileAvatarImg:     { width:88,height:88,borderRadius:44 },
@@ -822,88 +761,177 @@ const s = StyleSheet.create({
   infoRow:          { flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingVertical:11 },
   infoLabel:        { fontSize:13,color:MID,fontWeight:'500' },
   infoValue:        { fontSize:13,color:DARK,fontWeight:'600',maxWidth:'55%',textAlign:'right' },
-  signOutBtn:       { marginHorizontal:16,marginBottom:32,paddingVertical:15,borderRadius:12,borderWidth:1.5,borderColor:LIGHT_BORDER,alignItems:'center',backgroundColor:WHITE },
-  signOutTxt:       { color:MID,fontSize:15,fontWeight:'700' },
+  divider:          { height:1,backgroundColor:LIGHT_BORDER },
+  verifyPill:       { paddingHorizontal:8,paddingVertical:4,borderRadius:10,borderWidth:1 },
+  verifyPillTxt:    { fontSize:10,fontWeight:'700' },
 
-  botFab:        { position:'absolute',bottom:28,right:24,zIndex:50,shadowColor:TEAL_DARK,shadowOffset:{width:0,height:6},shadowOpacity:0.35,shadowRadius:16,elevation:12 },
-  botFabInner:   { width:58,height:58,borderRadius:29,backgroundColor:TEAL_DARK,alignItems:'center',justifyContent:'center' },
-  botFabBadge:   { position:'absolute',top:-2,right:-2,backgroundColor:'#FF6B6B',borderRadius:10,paddingHorizontal:5,paddingVertical:2,borderWidth:2,borderColor:WHITE },
-  botFabBadgeTxt:{ fontSize:9,fontWeight:'900',color:WHITE },
-  botWindow:     { position:'absolute',bottom:100,right:20,width:Platform.OS==='web'?380:(SCREEN_WIDTH-32),height:Platform.OS==='web'?520:480,backgroundColor:WHITE,borderRadius:20,shadowColor:'#000',shadowOffset:{width:0,height:12},shadowOpacity:0.2,shadowRadius:32,elevation:20,zIndex:49,overflow:'hidden',borderWidth:1,borderColor:LIGHT_BORDER },
+  // FCCPC card in profile
+  fccpcCard:     { flexDirection:'row',alignItems:'center',marginHorizontal:16,marginBottom:14,backgroundColor:WHITE,borderRadius:16,padding:18,borderWidth:1,borderColor:'#FECACA',shadowColor:'#C53030',shadowOffset:{width:0,height:2},shadowOpacity:0.06,shadowRadius:8,elevation:2,gap:12 },
+  fccpcIconWrap: { width:42,height:42,borderRadius:12,backgroundColor:'#FFF5F5',borderWidth:1,borderColor:'#FECACA',alignItems:'center',justifyContent:'center' },
+  fccpcCardTitle:{ fontSize:14,fontWeight:'800',color:'#9B1C1C',marginBottom:2 },
+  fccpcCardSub:  { fontSize:12,color:MID },
+  fccpcArrow:    { fontSize:22,fontWeight:'700',color:'#C53030' },
+
+  signOutBtn: { marginHorizontal:16,marginBottom:32,paddingVertical:15,borderRadius:12,borderWidth:1.5,borderColor:LIGHT_BORDER,alignItems:'center',backgroundColor:WHITE },
+  signOutTxt: { color:MID,fontSize:15,fontWeight:'700' },
+
+  // AI chatbot FAB + window
+  botFab:         { position:'absolute',bottom:84,right:20,zIndex:50,shadowColor:TEAL_DARK,shadowOffset:{width:0,height:6},shadowOpacity:0.35,shadowRadius:16,elevation:12 },
+  botFabInner:    { width:54,height:54,borderRadius:27,backgroundColor:TEAL_DARK,alignItems:'center',justifyContent:'center' },
+  botFabBadge:    { position:'absolute',top:-2,right:-2,backgroundColor:'#FF6B6B',borderRadius:10,paddingHorizontal:5,paddingVertical:2,borderWidth:2,borderColor:WHITE },
+  botFabBadgeTxt: { fontSize:9,fontWeight:'900',color:WHITE },
+  botWindow:      { position:'absolute',bottom:148,right:16,width:Platform.OS==='web'?380:(SCREEN_WIDTH-32),height:Platform.OS==='web'?520:480,backgroundColor:WHITE,borderRadius:20,shadowColor:'#000',shadowOffset:{width:0,height:12},shadowOpacity:0.2,shadowRadius:32,elevation:20,zIndex:49,overflow:'hidden',borderWidth:1,borderColor:LIGHT_BORDER },
 });
 
-// ── Home screen styles (separate sheet keeps the main one clean) ──
+// ── Bottom tab bar styles ────────────────────────────────────────
+const tab = StyleSheet.create({
+  bar: {
+    flexDirection: 'row',
+    backgroundColor: WHITE,
+    borderTopWidth: 1,
+    borderTopColor: LIGHT_BORDER,
+    paddingTop: 6,
+    paddingBottom: Platform.OS === 'ios' ? 22 : 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 16,
+  },
+  item: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    position: 'relative',
+    paddingTop: 2,
+  },
+  activePill: {
+    position: 'absolute',
+    top: -6,
+    width: 24,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: TEAL_DARK,
+  },
+  iconWrap: {
+    width: 40,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapActive: {
+    backgroundColor: TEAL + '18',
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: MID,
+  },
+  labelActive: {
+    color: TEAL_DARK,
+    fontWeight: '800',
+  },
+});
+
+// ── Home screen styles ───────────────────────────────────────────
 const hs = StyleSheet.create({
   scroll: { paddingBottom: 40 },
 
   // Hero
-  hero:         { margin: 16, marginTop: 20, backgroundColor: TEAL_DEEP, borderRadius: 24, padding: 24,
-                  shadowColor: TEAL_DEEP, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 20, elevation: 8 },
-  heroTop:      { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
-  heroGreeting: { fontSize: 13, color: WHITE + '99', fontWeight: '500', marginBottom: 2 },
+  hero: {
+    margin: 16,
+    marginTop: 20,
+    backgroundColor: TEAL_DEEP,
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: TEAL_DEEP,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  heroTop:      { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  heroGreeting: { fontSize: 13, color: WHITE + '88', fontWeight: '500', marginBottom: 2 },
   heroName:     { fontSize: 26, fontWeight: '900', color: WHITE, letterSpacing: -0.5 },
-  heroTagline:  { fontSize: 13, color: WHITE + 'BB', lineHeight: 20, marginBottom: 20 },
-  avatarWrap:   { width: 52, height: 52, borderRadius: 26, backgroundColor: WHITE + '22',
-                  borderWidth: 2, borderColor: WHITE + '44', alignItems: 'center', justifyContent: 'center',
-                  marginLeft: 12, overflow: 'hidden' },
+  heroTagline:  { fontSize: 13, color: WHITE + 'BB', lineHeight: 20, marginBottom: 24 },
+
+  avatarWrap:   { width: 52, height: 52, borderRadius: 26, backgroundColor: WHITE + '22', borderWidth: 2, borderColor: WHITE + '44', alignItems: 'center', justifyContent: 'center', marginLeft: 12, overflow: 'hidden' },
   avatarImg:    { width: 52, height: 52, borderRadius: 26 },
   avatarTxt:    { fontSize: 18, fontWeight: '900', color: WHITE },
 
-  heroBtn:      { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: WHITE + '22',
-                  borderWidth: 1, borderColor: WHITE + '44', borderRadius: 14,
-                  paddingVertical: 14, paddingHorizontal: 20, alignSelf: 'stretch', justifyContent: 'center' },
-  heroBtnPulse: { position: 'absolute', width: 10, height: 10, borderRadius: 5,
-                  backgroundColor: '#4ADE80' + '40', left: 20 },
+  // Radar + CTA
+  radarContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 64,
+  },
+  radarRing: {
+    position: 'absolute',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 1.5,
+    borderColor: WHITE + '60',
+  },
+  heroBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: WHITE + '22',
+    borderWidth: 1,
+    borderColor: WHITE + '44',
+    borderRadius: 14,
+    paddingVertical: 15,
+    paddingHorizontal: 22,
+    alignSelf: 'stretch',
+    justifyContent: 'center',
+  },
+  heroBtnPulse: { position: 'absolute', width: 10, height: 10, borderRadius: 5, backgroundColor: '#4ADE80' + '50', left: 22 },
   heroBtnDot:   { width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ADE80' },
   heroBtnTxt:   { flex: 1, color: WHITE, fontWeight: '800', fontSize: 15, letterSpacing: 0.2 },
 
-  // 2×2 action grid
-  grid:         { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginHorizontal: 16, marginBottom: 16 },
-  actionCard:   { width: '47%', flex: 1, borderRadius: 18, padding: 18, gap: 6,
-                  shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 5 },
-  actionIconWrap:{ width: 42, height: 42, borderRadius: 12, backgroundColor: WHITE + '22',
-                   alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  // 2×2 action grid — CARD_W ensures exactly 2 columns on all screen sizes
+  gridWrapper:  { alignItems: 'center', marginBottom: 16 },
+  grid:         { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 16, justifyContent: 'center' },
+  actionCard:   { borderRadius: 18, padding: 18, gap: 6, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 5 },
+  actionIconWrap:{ width: 44, height: 44, borderRadius: 13, backgroundColor: WHITE + '22', alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   actionLabel:  { fontSize: 14, fontWeight: '800', color: WHITE },
   actionSub:    { fontSize: 11, color: WHITE + 'BB', lineHeight: 16 },
 
   // Savings calculator
-  calcCard:     { marginHorizontal: 16, marginBottom: 16, backgroundColor: WHITE, borderRadius: 20,
-                  padding: 20, borderWidth: 1, borderColor: LIGHT_BORDER,
-                  shadowColor: TEAL, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 16, elevation: 4 },
+  calcCard:     { marginHorizontal: 16, marginBottom: 16, backgroundColor: WHITE, borderRadius: 20, padding: 20, borderWidth: 1, borderColor: LIGHT_BORDER, shadowColor: TEAL, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 16, elevation: 4 },
   calcHeader:   { marginBottom: 18 },
-  calcTitle:    { fontSize: 17, fontWeight: '900', color: DARK, marginBottom: 3 },
+  calcTitle:    { fontSize: 17, fontWeight: '900', color: DARK },
   calcSub:      { fontSize: 12, color: MID },
-  calcLabel:    { fontSize: 12, fontWeight: '700', color: MID, marginBottom: 10, textTransform: 'uppercase' as any, letterSpacing: 0.8 },
+  calcLabel:    { fontSize: 11, fontWeight: '700', color: MID, marginBottom: 10, textTransform: 'uppercase' as any, letterSpacing: 0.8 },
 
   chipRow:      { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip:         { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
-                  borderWidth: 1.5, borderColor: LIGHT_BORDER, backgroundColor: BG },
+  chip:         { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5, borderColor: LIGHT_BORDER, backgroundColor: BG },
   chipActive:   { backgroundColor: TEAL_DEEP, borderColor: TEAL_DEEP },
   chipTxt:      { fontSize: 13, fontWeight: '700', color: MID },
   chipTxtActive:{ color: WHITE },
 
-  counterRow:   { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  counterBtn:   { width: 42, height: 42, borderRadius: 21, backgroundColor: TEAL + '15',
-                  borderWidth: 1.5, borderColor: TEAL + '40', alignItems: 'center', justifyContent: 'center' },
-  counterBtnTxt:{ fontSize: 22, fontWeight: '700', color: TEAL_DEEP, lineHeight: 26 },
+  counterRow:    { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  counterBtn:    { width: 44, height: 44, borderRadius: 22, backgroundColor: TEAL + '15', borderWidth: 1.5, borderColor: TEAL + '40', alignItems: 'center', justifyContent: 'center' },
+  counterBtnTxt: { fontSize: 22, fontWeight: '700', color: TEAL_DEEP, lineHeight: 26 },
   counterValWrap:{ alignItems: 'center' },
-  counterVal:   { fontSize: 32, fontWeight: '900', color: DARK, lineHeight: 36 },
-  counterValLbl:{ fontSize: 11, color: MID, fontWeight: '500' },
+  counterVal:    { fontSize: 34, fontWeight: '900', color: DARK, lineHeight: 38 },
+  counterValLbl: { fontSize: 11, color: MID, fontWeight: '500' },
 
-  calcResult:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-                  marginTop: 20, backgroundColor: TEAL_DEEP + '08', borderRadius: 14,
-                  padding: 16, borderWidth: 1, borderColor: TEAL + '20' },
-  calcResultLbl:{ fontSize: 12, color: MID, fontWeight: '600', marginBottom: 4 },
-  calcResultAmt:{ fontSize: 32, fontWeight: '900', color: TEAL_DEEP },
-  saveBadge:    { backgroundColor: '#ECFDF5', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 8,
-                  borderWidth: 1, borderColor: '#6EE7B7' },
-  saveBadgeTxt: { fontSize: 15, fontWeight: '900', color: '#065F46' },
+  calcResult:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, backgroundColor: TEAL_DEEP + '09', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: TEAL + '22' },
+  calcResultLbl: { fontSize: 12, color: MID, fontWeight: '600', marginBottom: 4 },
+  calcResultAmt: { fontSize: 34, fontWeight: '900', color: TEAL_DEEP },
+  saveBadge:     { backgroundColor: '#ECFDF5', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: '#6EE7B7' },
+  saveBadgeTxt:  { fontSize: 15, fontWeight: '900', color: '#065F46' },
 
-  calcCta:      { marginTop: 14, backgroundColor: TEAL_DARK, borderRadius: 12,
-                  paddingVertical: 14, alignItems: 'center' },
-  calcCtaTxt:   { color: WHITE, fontWeight: '800', fontSize: 14 },
+  calcCta:    { marginTop: 14, backgroundColor: TEAL_DARK, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  calcCtaTxt: { color: WHITE, fontWeight: '800', fontSize: 14 },
 });
 
+// ── AI Chatbot styles ────────────────────────────────────────────
 const bot = StyleSheet.create({
   container:    { flex:1,backgroundColor:WHITE },
   header:       { flexDirection:'row',alignItems:'center',justifyContent:'space-between',padding:16,backgroundColor:TEAL_DARK },
